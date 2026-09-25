@@ -1,0 +1,26 @@
+# Phụ thuộc cho container HUẤN LUYỆN. Nặng, và cố ý tách khỏi backend.
+#
+# torch/torchvision KHÔNG ghim ở đây: image nền pytorch/pytorch đã có sẵn bản
+# biên dịch kèm CUDA. Ghim lại sẽ khiến pip gỡ bản có CUDA rồi tải bản CPU về —
+# đúng thứ làm hỏng việc huấn luyện trên GPU.
+
+numpy==2.5.2
+opencv-python-headless==5.0.0.93
+Pillow==12.3.0
+
+# Huấn luyện và đánh giá
+scikit-learn==1.9.0
+scipy==1.17.1
+matplotlib==3.10.7
+pandas==2.3.3
+tqdm==4.67.1
+PyYAML==6.0.2
+
+# Xuất và kiểm chứng ONNX
+onnx==1.20.0
+onnxruntime==1.29.0
+
+# Mô hình thầy cho chưng cất tri thức (MTCNN + InceptionResnetV1).
+# --no-deps là bắt buộc: gói này ghim torch/numpy phiên bản rất cũ, để pip tự giải
+# sẽ hạ cấp torch trong image xuống bản không dùng được GPU.
+facenet-pytorch==2.6.0

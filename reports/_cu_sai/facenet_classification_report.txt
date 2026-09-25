@@ -1,0 +1,51 @@
+Backbone: facenet (tag=facenet)
+Accuracy: 1.0000
+
+                           precision    recall  f1-score   support
+
+         Alejandro_Toledo       1.00      1.00      1.00         7
+             Alvaro_Uribe       1.00      1.00      1.00         7
+             Andre_Agassi       1.00      1.00      1.00         7
+             Ariel_Sharon       1.00      1.00      1.00         7
+    Arnold_Schwarzenegger       1.00      1.00      1.00         7
+             Bill_Clinton       1.00      1.00      1.00         7
+             Colin_Powell       1.00      1.00      1.00         7
+            David_Beckham       1.00      1.00      1.00         7
+          Donald_Rumsfeld       1.00      1.00      1.00         7
+            George_W_Bush       1.00      1.00      1.00         7
+        Gerhard_Schroeder       1.00      1.00      1.00         7
+  Gloria_Macapagal_Arroyo       1.00      1.00      1.00         7
+               Gray_Davis       1.00      1.00      1.00         7
+          Guillermo_Coria       1.00      1.00      1.00         7
+                Hans_Blix       1.00      1.00      1.00         7
+              Hugo_Chavez       1.00      1.00      1.00         7
+               Jack_Straw       1.00      1.00      1.00         7
+           Jacques_Chirac       1.00      1.00      1.00         7
+            Jean_Chretien       1.00      1.00      1.00         7
+        Jennifer_Capriati       1.00      1.00      1.00         7
+            John_Ashcroft       1.00      1.00      1.00         7
+          John_Negroponte       1.00      1.00      1.00         7
+      Juan_Carlos_Ferrero       1.00      1.00      1.00         7
+        Junichiro_Koizumi       1.00      1.00      1.00         7
+               Kofi_Annan       1.00      1.00      1.00         6
+               Laura_Bush       1.00      1.00      1.00         7
+           Lleyton_Hewitt       1.00      1.00      1.00         7
+Luiz_Inacio_Lula_da_Silva       1.00      1.00      1.00         7
+            Mahmoud_Abbas       1.00      1.00      1.00         6
+    Megawati_Sukarnoputri       1.00      1.00      1.00         7
+          Nestor_Kirchner       1.00      1.00      1.00         7
+     Recep_Tayyip_Erdogan       1.00      1.00      1.00         7
+            Ricardo_Lagos       1.00      1.00      1.00         7
+             Roh_Moo-hyun       1.00      1.00      1.00         7
+         Rudolph_Giuliani       1.00      1.00      1.00         7
+          Serena_Williams       1.00      1.00      1.00         7
+        Silvio_Berlusconi       1.00      1.00      1.00         7
+              Tom_Daschle       1.00      1.00      1.00         7
+                Tom_Ridge       1.00      1.00      1.00         7
+               Tony_Blair       1.00      1.00      1.00         7
+              Vicente_Fox       1.00      1.00      1.00         7
+           Vladimir_Putin       1.00      1.00      1.00         7
+
+                 accuracy                           1.00       292
+                macro avg       1.00      1.00      1.00       292
+             weighted avg       1.00      1.00      1.00       292

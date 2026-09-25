@@ -1,0 +1,59 @@
+# Lớp phủ dành cho lúc PHÁT TRIỂN. Không dùng khi triển khai thật.
+#
+#     docker compose -f compose.yml -f compose.dev.yml up
+#
+# Compose đọc hai tệp và trộn lại, tệp sau đè tệp trước. Nhờ vậy mọi thứ khai báo
+# ở compose.yml vẫn giữ nguyên, đây chỉ ghi đè đúng những chỗ khác biệt.
+#
+# Ba khác biệt so với bản chạy thật
+# ---------------------------------
+# 1. **Mã nguồn gắn từ máy chủ.** Sửa tệp .py ở máy là container thấy ngay, không
+#    phải build lại image.
+# 2. **uvicorn --reload.** Tự khởi động lại khi mã đổi.
+# 3. **Vite thay nginx.** Vite có thay nóng mô-đun (HMR): sửa React thì trang tự
+#    cập nhật mà không mất trạng thái đang thao tác. Bản build tĩnh không làm được.
+#
+# Đánh đổi: chậm hơn và không giống môi trường thật. Trước khi nộp hoặc bàn giao,
+# luôn chạy lại bản `docker compose up` thường để kiểm tra đúng thứ sẽ triển khai.
+
+services:
+  backend:
+    environment:
+      FACEID_DEBUG: "true"
+      # Vite chạy ở cổng 5173 — khác gốc với backend nên lần này CORS là cần thật.
+      FACEID_CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+    volumes:
+      - faceid_storage:/app/storage
+      - faceid_db:/app/db
+      # Gắn chỉ-đọc: container chạy được mã mới nhất nhưng không ghi đè lên mã
+      # nguồn ở máy, và không rải __pycache__ vào cây thư mục dự án.
+      - ../engine:/app/engine:ro
+      - ../backend:/app/backend:ro
+      - ../models:/app/models:ro
+    # Mở cổng thẳng ra máy chủ để gọi bằng curl hoặc mở Swagger mà không qua nginx.
+    ports:
+      - "8000:8000"
+    command: >
+      uvicorn backend.app.main:app
+      --host 0.0.0.0 --port 8000
+      --reload --reload-dir /app/backend --reload-dir /app/engine
+
+  web:
+    build:
+      # Dừng ở tầng `builder` — tầng này có Node và node_modules, đúng thứ Vite cần.
+      target: builder
+    ports:
+      - "5173:5173"
+    volumes:
+      # Gắn mã nguồn React để có thay nóng…
+      - ../web/src:/src/src
+      - ../web/index.html:/src/index.html
+      - ../web/tailwind.config.js:/src/tailwind.config.js
+      # …nhưng KHÔNG gắn đè /src/node_modules. node_modules ở máy Windows chứa các
+      # tệp nhị phân biên dịch cho Windows; đè vào container Linux là hỏng ngay.
+      - /src/node_modules
+    # --host 0.0.0.0: mặc định Vite chỉ nghe ở localhost BÊN TRONG container, nên
+    # từ máy chủ sẽ không kết nối được.
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    healthcheck:
+      disable: true

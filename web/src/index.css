@@ -1,0 +1,32 @@
+/* @import phải đứng TRƯỚC mọi khai báo khác theo chuẩn CSS — kể cả @tailwind. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ink-900 text-slate-200 font-sans antialiased;
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2b3350; border-radius: 5px; }
+}
+
+@layer components {
+  .card { @apply bg-ink-700 border border-line rounded-2xl; }
+  .btn  { @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+                 border border-line bg-ink-600 text-slate-200 transition
+                 hover:bg-[#232b47] disabled:opacity-40 disabled:cursor-not-allowed; }
+  .btn-primary { @apply border-0 text-white
+                 bg-gradient-to-r from-[#6d5efc] to-[#b16cff] hover:brightness-110; }
+  .btn-danger  { @apply border-[#7a2c4b] bg-[#3a1c2c] text-[#ffb3cf] hover:bg-[#4a2338]; }
+  .input { @apply w-full bg-[#101529] border border-[#303a55] rounded-lg px-3 py-2 text-sm
+                  text-slate-200 outline-none focus:border-brand-400 placeholder:text-slate-500; }
+  .label { @apply block text-xs font-semibold text-slate-400 mb-1.5; }
+  .th    { @apply text-left text-[11px] font-bold uppercase tracking-wider text-slate-400
+                  px-3 py-2.5 bg-ink-800 whitespace-nowrap; }
+  .td    { @apply px-3 py-2.5 text-sm border-t border-line-soft; }
+  .pill  { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold; }
+}

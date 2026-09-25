@@ -1,0 +1,32 @@
+# Huan luyen tren CASIA-WebFace (10.572 danh tinh, 501.196 anh, san 112x112)
+# Doc thang tu train.rec, KHONG giai nen ra dia.
+#
+#   python -m training.train --config training/configs/casia.yaml
+
+recordio_dir: data/kaggle/casia/casia-webface
+num_train_ids: 6000       # 6000 danh tinh -> gap 17x so voi 349 cua LFW
+num_val_ids: 400          # danh tinh rieng de do verification, khong giao train
+max_per_id: 22            # chan tran de can bang + gioi han thoi gian moi epoch
+
+out_dir: models
+name: mobilefacenet_casia
+
+image_size: 112
+embedding_dim: 512
+
+epochs: 18
+batch_size: 64
+lr: 0.1
+momentum: 0.9
+weight_decay: 0.0005
+warmup_iters: 500
+amp: false                # GTX 1650 khong co tensor core -> fp16 cham hon 2x
+
+scale: 64.0               # tap lon (>1000 danh tinh) dung 64 theo bai bao ArcFace
+margin: 0.5
+warmup_epochs: 3
+label_smoothing: 0.1
+
+augment_strength: 1.0
+workers: 0
+seed: 42

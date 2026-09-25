@@ -1,0 +1,48 @@
+{
+  "tag": "facenet_openset",
+  "backbone": "facenet",
+  "detector": "yunet",
+  "manifest": "data\\manifest.json",
+  "verification": {
+    "auc": 0.997576,
+    "eer": 0.019333333333333324,
+    "eer_threshold": 0.4529862105846405,
+    "accuracy": 0.9813333333333333,
+    "tar": {
+      "0.1": 0.994,
+      "0.01": 0.966,
+      "0.001": 0.8233333333333334
+    },
+    "n_pairs": 3000,
+    "n_identities": 13
+  },
+  "identification": {
+    "rank1": 0.9933774834437086,
+    "rank5": 1.0,
+    "n_probe": 151,
+    "n_gallery_people": 8,
+    "cmc": [
+      0.9933774834437086,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "openset": {
+    "dir": {
+      "0.1": 0.9933774834437086,
+      "0.05": 0.9933774834437086,
+      "0.01": 0.9933774834437086
+    },
+    "n_genuine": 151,
+    "n_impostor": 110,
+    "n_strangers": 5,
+    "operating_threshold": 0.5041378415049518,
+    "far_at_op": 0.00909090909090909,
+    "frr_at_op": 0.0066225165562914245
+  }
+}

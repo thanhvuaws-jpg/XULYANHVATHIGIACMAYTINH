@@ -1,0 +1,27 @@
+# Chung cat tri thuc: FaceNet (thay) -> MobileFaceNet (tro)
+#
+#   python -m training.distill --config training/configs/distill.yaml
+#
+# Khac train.py o cho: khong dung nhan danh tinh, nen tan dung duoc ca nhung anh
+# ma ArcFace phai vut di (nguoi chi co 1 anh).
+
+manifest: data/manifest_big.json
+extra_dirs:
+  - data/aligned_all        # toan bo LFW da align, da loc danh tinh val/test/stranger
+out_dir: models
+name: mobilefacenet_distill
+cache: data/teacher_embeddings.npz
+
+image_size: 112
+embedding_dim: 512
+
+epochs: 30
+batch_size: 64
+lr: 0.05
+momentum: 0.9
+weight_decay: 0.0005
+warmup_iters: 200
+
+augment_strength: 1.0     # thay nhin anh SACH, tro nhin anh da augment
+workers: 0
+seed: 42

@@ -1,0 +1,40 @@
+{
+  "basic": {
+    "apcer": 0.04733333333333333,
+    "bpcer": 0.04733333333333333,
+    "acer": 0.04733333333333333,
+    "threshold": 0.39599295568586496
+  },
+  "cross_print_to_screen": {
+    "apcer": 0.009333333333333334,
+    "bpcer": 0.008,
+    "acer": 0.008666666666666666,
+    "threshold": 0.992481183249882
+  },
+  "cross_screen_to_print": {
+    "apcer": 0.0,
+    "bpcer": 0.0,
+    "acer": 0.0,
+    "threshold": 0.6666666618554371
+  },
+  "degraded_real": {
+    "bpcer_degraded": 0.09333333333333334,
+    "mean_score_degraded_real": 0.883545212251535,
+    "mean_score_clean_real": 0.9380331786548821,
+    "mean_score_attack": 0.05621392467083774
+  },
+  "importance": {
+    "sat_std": 0.15713333333333332,
+    "lbp_entropy": 0.12853333333333333,
+    "edge_density": 0.06766666666666665,
+    "lbp_uniformity": 0.028733333333333323,
+    "moire_ratio": 0.019799999999999995,
+    "sat_mean": 0.01160000000000001,
+    "color_moment3": 0.009066666666666667,
+    "chroma_range": 0.007466666666666644,
+    "moire_peak": 0.003666666666666685,
+    "highlight_spread": 0.0002666666666666595,
+    "spec_kurtosis": 0.00020000000000000017,
+    "spec_highlight": -0.0005333333333333634
+  }
+}

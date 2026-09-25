@@ -1,0 +1,55 @@
+# Data & model artifacts (khong commit)
+data/kaggle/**
+data/enrolled/**
+data/aligned/**
+!data/**/.gitkeep
+models/*.pt
+models/*.json
+models/*.task
+db/*.pkl
+reports/*.png
+reports/*.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Kaggle credentials
+kaggle.json
+.kaggle/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ---------------------------------------------------------------- bổ sung khi
+# đưa mã nguồn lên GitHub. Ba nhóm dưới đây KHÔNG được đẩy lên kho công khai.
+
+# 1. Bí mật. deploy/.env chứa FACEID_SECRET_KEY thật (64 ký tự) dùng để ký token
+#    đăng nhập. Lộ khoá này là người ngoài tự tạo được token quản trị hợp lệ.
+#    Bản mẫu deploy/.env.example vẫn được đẩy lên, trong đó giá trị để trống.
+deploy/.env
+.env
+
+# 2. Dữ liệu sinh trắc học và thông tin cá nhân. Ảnh khuôn mặt thật của người
+#    dùng, ảnh chụp lúc điểm danh, và tài liệu có họ tên kèm mã số sinh viên.
+#    Đẩy lên kho công khai là công bố dữ liệu cá nhân của người khác.
+storage/
+report/anh_app/
+BAO_CAO_HOAN_CHINH.docx
+BAO_CAO_HOAN_CHINH.pdf
+ĐKĐT_*.docx
+
+# 3. Tệp nặng và tệp sinh lại được. Bộ dữ liệu huấn luyện 3,9 GB, thư viện
+#    node, và checkpoint PyTorch ~98 MB/tệp (vượt giới hạn khuyến nghị của
+#    GitHub). Bản ONNX ~4,8 MB vẫn được đẩy lên để chạy được ứng dụng ngay.
+data/
+node_modules/
+web/dist/
+*.log

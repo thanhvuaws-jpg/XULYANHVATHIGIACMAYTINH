@@ -1,0 +1,180 @@
+# Triển khai FaceID Attendance bằng Docker Compose.
+#
+#     cd deploy
+#     cp .env.example .env          # rồi sửa FACEID_SECRET_KEY
+#     docker compose up -d --build
+#
+#     Giao diện web  →  http://localhost:8090
+#     Tài liệu API   →  http://localhost:8090/docs
+#
+# Bản đồ dịch vụ
+# --------------
+#     trình duyệt ──8090──> web (nginx) ──┬── tệp tĩnh React
+#                                          └──/api──> backend (uvicorn) ── engine
+#                                                          │
+#                                                          └── SQLite hoặc Postgres
+#
+# Chỉ `web` mở cổng ra ngoài. backend và db nói chuyện trong mạng nội bộ của
+# Docker, không máy nào ngoài máy chủ chạm tới được.
+#
+# Ba profile
+# ----------
+#   (mặc định)  web + backend, cơ sở dữ liệu SQLite      → chạy ngay, không cấu hình
+#   --profile pg     thêm PostgreSQL                     → dùng khi triển khai thật
+#   --profile train  container huấn luyện (~7 GB, cần GPU)
+
+name: faceid
+
+services:
+  # ------------------------------------------------------------------ backend
+  backend:
+    build:
+      # Bối cảnh build là THƯ MỤC GỐC dự án, không phải deploy/. Dockerfile cần
+      # chép engine/, backend/ và models/ — đều nằm trên một cấp so với tệp này.
+      context: ..
+      dockerfile: deploy/backend.Dockerfile
+    image: faceid-backend:1.0
+    restart: unless-stopped
+    environment:
+      # Mọi biến đều có tiền tố FACEID_ (khai báo ở backend/app/core/config.py).
+      FACEID_SECRET_KEY:  ${FACEID_SECRET_KEY:?Chua dat FACEID_SECRET_KEY - hay chep .env.example thanh .env}
+      FACEID_DATABASE_URL: ${FACEID_DATABASE_URL:-sqlite:////app/db/faceid.sqlite3}
+
+      # Engine: dùng mô hình do nhóm tự huấn luyện, chạy bằng ONNX Runtime.
+      # Đây là bản tốt nhất đo được — rank-1 0.985 (xem docs/NHAT_KY_KY_THUAT.md).
+      FACEID_EMBED_BACKEND:  onnx
+      FACEID_EMBED_WEIGHTS:  /app/models/mobilefacenet_distill_casia.onnx
+      FACEID_DETECT_BACKEND: yunet
+      FACEID_INDEX_BACKEND:  ${FACEID_INDEX_BACKEND:-bruteforce}
+
+      # Chống giả mạo ở PHÍA MÁY CHỦ cố ý để TẮT. Không phải vì xem nhẹ, mà vì
+      # máy chủ về nguyên tắc không làm được việc này:
+      #
+      #   • Phương pháp hiệu quả duy nhất đo được là phát hiện CHỚP MẮT, vốn là
+      #     tín hiệu theo thời gian — phải có chuỗi khung hình mới đo được. Máy
+      #     chủ chỉ nhận MỘT tấm ảnh mỗi lần điểm danh nên không thể đo.
+      #   • Phương pháp phân tích kết cấu ảnh (chạy được trên một tấm ảnh) đã đo
+      #     là hỏng trên tấn công thật: APCER 100 %, ACER 50–70 %. Bật nó lên còn
+      #     tệ hơn tắt, vì nó chặn oan người thật trong khi vẫn cho mọi đòn tấn
+      #     công lọt qua — tạo cảm giác an toàn giả.
+      #
+      # Liveness vì vậy được thực thi tại MÁY KIOSK, nơi có luồng video. Đánh đổi
+      # phải nói rõ: kiosk bị chiếm quyền thì có thể bỏ qua bước này, nên mô hình
+      # tin cậy của tầng chống giả mạo yếu hơn tầng nhận diện (máy chủ vẫn tự
+      # nhận diện lại nên không thể giả mạo DANH TÍNH).
+      FACEID_LIVENESS_BACKEND: ${FACEID_LIVENESS_BACKEND:-none}
+
+      FACEID_MATCH_THRESHOLD:  ${FACEID_MATCH_THRESHOLD:-0.55}
+      FACEID_MIN_CONFIDENCE:   ${FACEID_MIN_CONFIDENCE:-0.55}
+      FACEID_CHECKIN_COOLDOWN_MINUTES: ${FACEID_CHECKIN_COOLDOWN_MINUTES:-5}
+
+      # nginx và backend cùng một gốc nên trình duyệt không gửi yêu cầu chéo gốc.
+      # Danh sách này chỉ cần khi có máy kiosk hoặc web chạy ở tên miền khác.
+      FACEID_CORS_ORIGINS: ${FACEID_CORS_ORIGINS:-}
+
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    volumes:
+      # Ảnh đăng ký và ảnh chụp lúc điểm danh — phải sống lâu hơn container.
+      - faceid_storage:/app/storage
+      # Cơ sở dữ liệu SQLite. Dùng Postgres thì volume này thành vô hại, không cần gỡ.
+      - faceid_db:/app/db
+    # Không mở `ports:` ra máy chủ — chỉ nginx được phép gọi backend.
+    expose:
+      - "8000"
+    networks: [faceid_net]
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false      # profile `pg` không bật thì bỏ qua, không báo lỗi
+
+  # ---------------------------------------------------------------------- web
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    image: faceid-web:1.0
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8090}:80"
+    networks: [faceid_net]
+    depends_on:
+      backend:
+        # Chờ backend nạp xong mô hình rồi mới nhận lưu lượng, để người mở trang
+        # đầu tiên không gặp lỗi 502.
+        condition: service_healthy
+
+  # ----------------------------------------------------------------- postgres
+  # Bật bằng:  docker compose --profile pg up -d
+  # rồi đặt trong .env:
+  #     FACEID_DATABASE_URL=postgresql+psycopg://faceid:<mat-khau>@db:5432/faceid
+  #
+  # Vì sao mặc định vẫn là SQLite: hệ thống này ghi rất thưa (vài chục dòng điểm
+  # danh mỗi buổi) và chỉ có một tiến trình backend ghi vào. SQLite thừa sức, lại
+  # bớt một dịch vụ phải trông. Chuyển sang Postgres khi có nhiều máy chủ cùng
+  # ghi, hoặc khi cần sao lưu nóng và nhiều người truy vấn song song.
+  db:
+    profiles: [pg]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-faceid}
+      # Cố ý KHÔNG dùng cú pháp bắt buộc `:?`: Compose thay thế biến cho TOÀN BỘ
+      # tệp trước khi lọc profile, nên `:?` ở đây sẽ chặn cả lệnh chạy thường dù
+      # profile `pg` không hề được bật. Để trống thì image postgres tự từ chối
+      # khởi động với thông báo rõ ràng — lỗi nổ đúng lúc và đúng chỗ.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB:       ${POSTGRES_DB:-faceid}
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    volumes:
+      - faceid_pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks: [faceid_net]
+    healthcheck:
+      # backend chờ điều kiện này trước khi khởi động — tránh việc nó cố kết nối
+      # lúc Postgres còn đang dựng cơ sở dữ liệu lần đầu.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-faceid} -d ${POSTGRES_DB:-faceid}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------------- training
+  # Không bao giờ tự dựng. Gọi rõ ràng:
+  #     docker compose --profile train run --rm training \
+  #         python -m training.train --config training/configs/casia.yaml
+  training:
+    profiles: [train]
+    build:
+      context: ..
+      dockerfile: deploy/training.Dockerfile
+    image: faceid-training:1.0
+    volumes:
+      # Gắn thẳng thư mục trên máy chủ: dữ liệu gần 4 GB, và checkpoint sinh ra
+      # phải nằm lại trên máy sau khi container tắt.
+      - ../data:/app/data
+      - ../models:/app/models
+      - ../reports:/app/reports
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+    # Cần NVIDIA Container Toolkit. Không có GPU thì xoá khối `deploy:` này —
+    # mọi thứ vẫn chạy trên CPU, chỉ chậm hơn nhiều.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # Huấn luyện dùng bộ nhớ dùng chung cho các tiến trình nạp dữ liệu; mặc định
+    # 64 MB của Docker quá nhỏ và DataLoader sẽ chết giữa chừng.
+    shm_size: "2gb"
+    networks: [faceid_net]
+
+networks:
+  faceid_net:
+    driver: bridge
+
+volumes:
+  faceid_storage:
+  faceid_db:
+  faceid_pgdata:

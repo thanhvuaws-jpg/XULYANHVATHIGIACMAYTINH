@@ -1,0 +1,54 @@
+# Phụ thuộc cho container BACKEND — chỉ đủ để CHẠY, không để huấn luyện.
+#
+# Cố ý KHÔNG có torch. Mô hình đã xuất sang ONNX (training/export_onnx.py) nên lúc
+# chạy chỉ cần onnxruntime (66 MB đo trong image). Số đo dung lượng của hai bản
+# dựng — có torch và không có torch — nằm ở docs/NHAT_KY_KY_THUAT.md, Task 12.
+#
+# Phiên bản ghim đúng bằng bản đã kiểm thử ở máy phát triển. Riêng scikit-learn
+# BẮT BUỘC khớp: models/liveness_texture.pkl được pickle bằng bản này, lệch bản
+# thì unpickle sẽ cảnh báo hoặc hỏng.
+
+# --- web framework ---
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+python-multipart==0.0.32       # nhận tải ảnh lên qua multipart/form-data
+
+# --- cấu hình và kiểm tra dữ liệu ---
+pydantic==2.13.5
+pydantic-settings==2.7.1
+
+# --- cơ sở dữ liệu ---
+SQLAlchemy==2.0.52
+psycopg[binary]==3.2.13        # dùng khi DATABASE_URL trỏ tới PostgreSQL
+
+# --- bảo mật ---
+# KHÔNG dùng passlib: bản 1.7.4 hỏng với bcrypt >= 4.1 (đọc bcrypt.__about__ đã bị
+# gỡ) nên báo "password cannot be longer than 72 bytes" ngay cả với mật khẩu 8 ký
+# tự. Gọi thẳng thư viện bcrypt, tự cắt 72 byte.
+bcrypt==5.0.0
+python-jose[cryptography]==3.5.0
+
+# --- thị giác máy tính lúc chạy ---
+numpy==2.5.2
+# headless = không kéo theo GTK/X11. Container không có màn hình; bản thường sẽ
+# thiếu libGL.so.1 và chết ngay lúc import cv2.
+#
+# Ghim đúng 5.0.0.93 — cùng thế hệ OpenCV với opencv-contrib-python ở máy phát
+# triển, để hành vi của cv2.FaceDetectorYN và cv2.estimateAffinePartial2D giống
+# hệt bản đã đo đạc. Mọi hàm cv2 mà engine dùng đều nằm ở gói chính, không cần
+# contrib.
+opencv-python-headless==5.0.0.93
+onnxruntime==1.29.0
+Pillow==12.3.0
+
+# --- chống giả mạo (liveness) ---
+scikit-learn==1.9.0            # PHẢI khớp bản đã pickle models/liveness_texture.pkl
+scipy==1.17.1
+
+# --- xuất báo cáo Excel ---
+# Cần cho /api/attendance/export.xlsx. CSV không mang được định dạng nên Excel
+# hiển thị ngày thành ###### và mọi cột đều chật.
+openpyxl==3.1.5
+
+# --- chỉ mục tra cứu vector ---
+hnswlib==0.8.0                 # dùng khi FACEID_INDEX_BACKEND=hnsw

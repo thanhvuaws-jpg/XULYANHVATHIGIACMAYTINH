@@ -1,0 +1,158 @@
+{
+  "baseline": {
+    "rank1": 0.9778481012658228,
+    "rank5": 0.9984177215189873,
+    "dir": {
+      "0.1": 0.9193037974683544,
+      "0.01": 0.7199367088607594
+    },
+    "margin": 0.25458628917618464,
+    "n_gallery": 366,
+    "n_probe": 632,
+    "n_impostor": 474,
+    "n_enrolled_people": 122,
+    "enroll_images": {
+      "seen": 366,
+      "used": 366,
+      "unreadable": 0,
+      "no_face": 0,
+      "no_chip": 0,
+      "rejected_quality": 0
+    },
+    "probe_images": {
+      "seen": 1106,
+      "used": 1106,
+      "unreadable": 0,
+      "no_face": 0,
+      "no_chip": 0,
+      "rejected_quality": 0
+    },
+    "enroll_reject_rate": 0.0,
+    "seconds": 18.2
+  },
+  "no_align": {
+    "rank1": 0.8829113924050633,
+    "rank5": 0.9683544303797469,
+    "dir": {
+      "0.1": 0.7389240506329114,
+      "0.01": 0.5537974683544303
+    },
+    "margin": 0.1842524028926118,
+    "n_gallery": 366,
+    "n_probe": 632,
+    "n_impostor": 474,
+    "n_enrolled_people": 122,
+    "enroll_images": {
+      "seen": 366,
+      "used": 366,
+      "unreadable": 0,
+      "no_face": 0,
+      "no_chip": 0,
+      "rejected_quality": 0
+    },
+    "probe_images": {
+      "seen": 1106,
+      "used": 1106,
+      "unreadable": 0,
+      "no_face": 0,
+      "no_chip": 0,
+      "rejected_quality": 0
+    },
+    "enroll_reject_rate": 0.0,
+    "seconds": 16.2
+  },
+  "gate_enroll": {
+    "rank1": 0.9778481012658228,
+    "rank5": 0.9984177215189873,
+    "dir": {
+      "0.1": 0.9193037974683544,
+      "0.01": 0.7199367088607594
+    },
+    "margin": 0.2548127194527674,
+    "n_gallery": 359,
+    "n_probe": 632,
+    "n_impostor": 474,
+    "n_enrolled_people": 122,
+    "enroll_images": {
+      "seen": 366,
+      "used": 359,
+      "unreadable": 0,
+      "no_face": 0,
+      "no_chip": 0,
+      "rejected_quality": 7,
+      "reasons": {
+        "ảnh mờ": 4,
+        "quay ngang quá nhiều": 2,
+        "chất lượng tổng thể thấp": 1
+      }
+    },
+    "probe_images": {
+      "seen": 1106,
+      "used": 1106,
+      "unreadable": 0,
+      "no_face": 0,
+      "no_chip": 0,
+      "rejected_quality": 0
+    },
+    "enroll_reject_rate": 0.01912568306010929,
+    "seconds": 16.5
+  },
+  "quality_gate": {
+    "rank1": 0.9804241435562806,
+    "rank5": 1.0,
+    "dir": {
+      "0.1": 0.9200652528548124,
+      "0.01": 0.7259380097879282
+    },
+    "margin": 0.25545164251524255,
+    "n_gallery": 359,
+    "n_probe": 613,
+    "n_impostor": 469,
+    "n_enrolled_people": 122,
+    "enroll_images": {
+      "seen": 366,
+      "used": 359,
+      "unreadable": 0,
+      "no_face": 0,
+      "no_chip": 0,
+      "rejected_quality": 7,
+      "reasons": {
+        "ảnh mờ": 4,
+        "quay ngang quá nhiều": 2,
+        "chất lượng tổng thể thấp": 1
+      }
+    },
+    "probe_images": {
+      "seen": 1106,
+      "used": 1082,
+      "unreadable": 0,
+      "no_face": 0,
+      "no_chip": 0,
+      "rejected_quality": 24,
+      "reasons": {
+        "ảnh mờ": 8,
+        "quay ngang quá nhiều": 11,
+        "chất lượng tổng thể thấp": 6
+      }
+    },
+    "enroll_reject_rate": 0.01912568306010929,
+    "seconds": 18.3
+  },
+  "tracking": {
+    "threshold": 0.55,
+    "frames_per_person": 24,
+    "no_tracking": {
+      "accuracy": 0.9467031089853092,
+      "label_flips": 206,
+      "flips_per_100_frames": 7.037922787837376
+    },
+    "with_tracking": {
+      "accuracy": 0.9672019132217288,
+      "label_flips": 26,
+      "flips_per_100_frames": 0.8882815169115135
+    },
+    "confirm_after_frames": 5.111111111111111,
+    "people_confirmed": 117,
+    "frames_evaluated": 2927
+  }
+}

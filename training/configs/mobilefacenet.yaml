@@ -1,0 +1,31 @@
+# Cấu hình huấn luyện MobileFaceNet + ArcFace
+# Dùng cho GPU 4 GB (GTX 1650). Máy khoẻ hơn thì tăng batch_size lên 256-512.
+#
+#   python -m training.train --config training/configs/mobilefacenet.yaml
+
+manifest: data/manifest.json
+out_dir: models
+name: mobilefacenet_arcface
+
+# --- kiến trúc ---
+image_size: 112          # chuẩn ArcFace, khớp engine/align.py
+embedding_dim: 512
+
+# --- lịch huấn luyện ---
+epochs: 50
+batch_size: 128          # ArcFace cần batch lớn; hạ xuống 64 nếu hết VRAM
+lr: 0.1                  # SGD momentum, đúng công thức bài báo ArcFace
+momentum: 0.9
+weight_decay: 0.0005
+amp: true                # mixed precision fp16 — bắt buộc để vừa 4 GB
+
+# --- ArcFace ---
+scale: 64.0              # bán kính mặt cầu. Tập nhỏ (<1000 người) nên dùng 30
+margin: 0.5              # biên độ góc đích (~28.6°)
+warmup_epochs: 5         # m tăng dần 0 → 0.5. ĐỪNG đặt 0, mạng sẽ không hội tụ
+label_smoothing: 0.1
+
+# --- dữ liệu ---
+augment_strength: 1.0    # 0 = tắt augmentation, dùng cho ablation
+workers: 0               # Windows nên để 0; Linux/WSL đặt 4-8 cho nhanh
+seed: 42

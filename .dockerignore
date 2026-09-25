@@ -1,0 +1,57 @@
+# Những thứ KHÔNG được gửi vào Docker build context.
+#
+# Vì sao quan trọng: build context là toàn bộ thư mục dự án được nén rồi gửi cho
+# Docker daemon TRƯỚC KHI đọc Dockerfile. Không loại trừ thì mỗi lần build phải
+# gửi gần 4 GB dữ liệu huấn luyện — chậm hàng phút và chẳng dùng tới.
+
+# --- dữ liệu huấn luyện: 3.9 GB, container chạy thật không cần ---
+data/
+datasets/
+*.rec
+*.idx
+*.bin
+
+# --- checkpoint PyTorch: image backend dùng ONNX, không cần .pt (~230 MB) ---
+models/*.pt
+models/*.task
+models/*_history.json
+
+# --- kết quả chạy: gắn volume lúc chạy, không nướng vào image ---
+storage/
+db/
+reports/
+runs/
+logs/
+
+# --- phụ thuộc build ở máy: image tự cài lại từ đầu ---
+web/node_modules/
+web/dist/
+.venv/
+venv/
+env/
+
+# --- rác Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- tài liệu và tệp riêng ---
+.git/
+.github/
+docs/
+*.docx
+demo_*.jpg
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- bí mật: tuyệt đối không lọt vào image ---
+.env
+*.env
+!deploy/.env.example
+.kaggle/
+kaggle.json

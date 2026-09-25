@@ -1,0 +1,35 @@
+# Chạy huấn luyện trên LFW (~349 danh tính train) — dùng để kiểm chứng pipeline
+# và làm mốc so sánh. Với dataset thật (Pins 105 người, hoặc CASIA 10k người) thì
+# dùng training/configs/mobilefacenet.yaml.
+#
+#   python -m training.train --config training/configs/lfw_mobilefacenet.yaml
+
+manifest: data/manifest_big.json
+out_dir: models
+name: mobilefacenet_lfw
+
+image_size: 112
+embedding_dim: 512
+
+epochs: 60
+batch_size: 64
+lr: 0.1                  # cong thuc chuan ArcFace; an toan khi da co warmup + fp32
+warmup_iters: 200        # nang dan lr trong 200 buoc dau - BAT BUOC, thieu la NaN
+momentum: 0.9
+weight_decay: 0.0005
+# amp TAT. Do thuc te tren GTX 1650 (TU117, KHONG co tensor core):
+#   fp32 = 84.8 ms/batch   |   amp = 163.2 ms/batch  -> amp CHAM HON 2x
+# Ngoai ra fp16 con lam tran bien do trong block[13] cua MobileFaceNet -> NaN.
+# Chi bat lai tren GPU co tensor core (RTX 20xx tro len) sau khi do lai.
+amp: false
+
+# scale=32 thay vì 64: với dưới ~1000 danh tính, bán kính mặt cầu lớn làm logit
+# bão hoà quá sớm và gradient teo lại.
+scale: 32.0
+margin: 0.5
+warmup_epochs: 6
+label_smoothing: 0.1
+
+augment_strength: 1.0
+workers: 0
+seed: 42
