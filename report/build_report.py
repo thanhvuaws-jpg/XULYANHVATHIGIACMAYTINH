@@ -337,7 +337,7 @@ def viet_danh_muc_hinh(doc, anchor, b: "Builder") -> None:
 BIA = {
     "hoc_phan": "XỬ LÝ ẢNH VÀ THỊ GIÁC MÁY TÍNH",
     "de_tai": "XÂY DỰNG HỆ THỐNG ĐIỂM DANH SINH VIÊN BẰNG NHẬN DIỆN KHUÔN MẶT",
-    "gvhd": "Hồ Văn Quý",
+    "gvhd": "Hồ Văn Quí",
     "nhom": "10",
     "ma_lop": "010100086904",
     "thang_nam": "10/2026",
