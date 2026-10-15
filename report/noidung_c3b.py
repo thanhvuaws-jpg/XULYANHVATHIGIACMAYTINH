@@ -32,7 +32,7 @@ NGUOI_DUNG_THAT = [
               "Khung xanh, điểm sống 1,00, mà không có bản ghi nào"],
              ["8", "Tỉ lệ chuyên cần chia sai đơn vị",
               "Bảng điều khiển hiện tỉ lệ chuyên cần 133 %"]]),
-    ("cap", "Bảng 3.17. Tám lỗi phát hiện khi người dùng thật sử dụng hệ thống"),
+    ("cap", "Bảng 3.20. Tám lỗi phát hiện khi người dùng thật sử dụng hệ thống"),
 
     ("p", "**Lỗi 1 — cổng chất lượng quá gắt.** Ngưỡng độ nét 0,025 hiệu chỉnh theo ảnh "
           "báo chí của bộ LFW tỏ ra sai hoàn toàn với ảnh webcam. Chi tiết và cách đo lại "
@@ -64,7 +64,7 @@ NGUOI_DUNG_THAT = [
              ["100 px", "0,1371", ""],
              ["130 px", "0,1531", ""],
              ["220 px", "0,2123", "vẫn chưa chạm ngưỡng \"đã mở\" 0,22"]]),
-    ("cap", "Bảng 3.18. EAR của mắt đang mở thay đổi theo kích thước khuôn mặt"),
+    ("cap", "Bảng 3.21. EAR của mắt đang mở thay đổi theo kích thước khuôn mặt"),
     ("p", "Nguyên nhân: sai số định vị điểm mốc lấn át tín hiệu thật khi mắt chỉ còn vài "
           "chục điểm ảnh. Hậu quả quan sát được: người đứng xa thì mắt bị coi là **nhắm "
           "vĩnh viễn**, máy trạng thái không bao giờ thấy chuỗi mở → nhắm → mở, không "
@@ -88,7 +88,7 @@ NGUOI_DUNG_THAT = [
              ["Vàng", "Đang kiểm tra — chưa đủ bằng chứng", "Không"],
              ["Xanh", "Người thật, đã nhận ra", "Có"],
              ["Đỏ", "Đã xét đủ và kết luận là giả", "Không"]]),
-    ("cap", "Bảng 3.19. Ba trạng thái hiển thị của tầng chống giả mạo"),
+    ("cap", "Bảng 3.22. Ba trạng thái hiển thị của tầng chống giả mạo"),
     ("p", "Trạng thái vàng là thứ bản đầu thiếu hoàn toàn. Hệ thống chỉ có hai màu nên "
           "buộc phải chọn một trong hai ngay lập tức, và nó chọn sai. Thêm vào đó, trạng "
           "thái vàng **không hiển thị tên người** — một kết quả chưa được xác nhận không "
@@ -106,7 +106,7 @@ NGUOI_DUNG_THAT = [
              ["0,68 — chọn dùng", "2,1 %", "10,9 %"],
              ["0,70", "1,5 %", "13,8 %"],
              ["0,75", "0,2 %", "25,8 %"]]),
-    ("cap", "Bảng 3.20. Đánh đổi giữa nhận nhầm và từ chối oan theo ngưỡng"),
+    ("cap", "Bảng 3.23. Đánh đổi giữa nhận nhầm và từ chối oan theo ngưỡng"),
     ("p", "Ngưỡng 0,55 cho **một phần tư số người lạ đi qua**. Với một hệ thống điểm danh "
           "thì con số đó phá hỏng chính lý do nó tồn tại."),
     ("p", "Điểm cân bằng lỗi (0,631, nơi FAR bằng FRR) là lựa chọn mặc định khi hai loại "

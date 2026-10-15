@@ -181,6 +181,26 @@ CHUONG_3 = [
     ("li", "**Mô hình được chọn đạt gần bằng mô hình thầy với chi phí nhỏ hơn nhiều bậc**: "
            "0,978 so với 0,984 về tỉ lệ đúng hạng nhất, trong khi **nhẹ hơn 22 lần** "
            "(4,8 MB so với 107 MB) và **nhanh hơn 17,7 lần** (4,73 ms so với 83,70 ms)."),
+    ("p", "Cấu hình huấn luyện của bốn mô hình do nhóm tự huấn luyện được ghi lại đầy "
+          "đủ để chạy lại được:"),
+    ("tbl", [["Mô hình", "Epoch", "Tốc độ học", "Tham số ArcFace", "Thời gian", "val_ver"],
+             ["ArcFace · LFW", "60", "0,10", "m 0,5 · s 32", "10,5 phút", "0,8600"],
+             ["ArcFace · CASIA", "18", "0,10", "m 0,5 · s 64", "128,8 phút", "0,8240"],
+             ["Chưng cất · LFW", "30", "0,05", "hồi quy cosine", "17,2 phút", "0,9327"],
+             ["Chưng cất · CASIA+LFW", "12", "0,05", "hồi quy cosine", "76,4 phút", "0,9687"]]),
+    ("cap", "Bảng 3.6. Cấu hình huấn luyện bốn mô hình do nhóm huấn luyện"),
+    ("p", "Mọi mô hình đều dùng chung ảnh vào 112×112, vector ra 512 chiều, lô 64 ảnh, "
+          "thuật toán SGD với quán tính 0,9 và suy giảm trọng số 0,0005. Hai mô hình "
+          "ArcFace có thêm giai đoạn khởi động tốc độ học và làm mượt nhãn 0,1; hai mô "
+          "hình chưng cất không cần vì đích học là vector của mô hình thầy chứ không phải "
+          "nhãn phân loại. Cột val_ver là tỉ lệ xác thực đúng trên tập kiểm định gồm "
+          "những người **chưa từng xuất hiện lúc huấn luyện**."),
+    ("p", "Chênh lệch thời gian giữa hai mô hình chưng cất đáng chú ý: bản LFW chạy 30 "
+          "epoch chỉ mất 17,2 phút, còn bản CASIA+LFW chạy 12 epoch đã mất 76,4 phút — "
+          "gấp hơn bốn lần cho mỗi epoch, đúng với tỉ lệ tăng dữ liệu từ 9 nghìn lên 112 "
+          "nghìn ảnh. Vector đích của mô hình thầy được tính trước một lần rồi lưu lại, "
+          "nếu không thì mỗi epoch phải chạy lại mô hình thầy 107 MB trên toàn bộ ảnh."),
+
     ("p", "Trường hợp mô hình ArcFace huấn luyện từ đầu trên CASIA đáng được nhắc riêng: "
           "nó có tỉ lệ lỗi cân bằng ngang với mô hình huấn luyện trên LFW (9,57 % so với "
           "9,63 %) nhưng chỉ số open-set lại thấp hơn hẳn (0,2199 so với 0,6756). Điều "
@@ -188,6 +208,35 @@ CHUONG_3 = [
           "chuyện, còn cho ra một điểm số đáng tin cậy ở mức tuyệt đối lại là chuyện "
           "khác**. Ngưỡng vận hành đề xuất của mô hình này là 0,977 — sát trần, dấu hiệu "
           "cho thấy mọi vector của nó nằm chen chúc trong một vùng hẹp."),
+
+    ("p", "**Mô hình nào đang chạy trong sản phẩm.** Hệ thống để mặc định là **FaceNet**, "
+          "tức mô hình thầy, chứ không phải mô hình chưng cất do nhóm huấn luyện. Lý do "
+          "là trên máy có card đồ hoạ, 83,70 mili giây mỗi lượt trích đặc trưng vẫn nằm "
+          "trong ngân sách thời gian thực vì chuỗi xử lý chỉ gọi mạng trích đặc trưng mỗi "
+          "vài khung trên từng người chứ không gọi mỗi khung, nên phần chính xác hơn "
+          "được ưu tiên. Mô hình chưng cất là lựa chọn dành cho máy yếu: đổi trong Bảng "
+          "điều khiển rồi dựng lại chỉ mục là chạy được ngay, không phải sửa mã. Cần nói "
+          "rõ điều này vì nó ảnh hưởng tới cách đọc kết quả ở Bảng 3.5 — bảng đó so sánh "
+          "năng lực các mô hình, không mô tả cấu hình đang chạy."),
+    ("p", "Ngoài mạng trích đặc trưng, hệ thống còn dùng bốn mô hình khác, mỗi mô hình "
+          "giải một bài toán con:"),
+    ("tbl", [["Mô hình", "Vai trò trong hệ thống", "Cỡ", "Nguồn"],
+             ["YuNet", "Phát hiện khuôn mặt và 5 điểm mốc để căn chỉnh", "0,23 MB",
+              "Có sẵn trong OpenCV"],
+             ["MobileFaceNet chưng cất", "Trích đặc trưng — nhóm huấn luyện", "4,8 MB",
+              "Nhóm huấn luyện"],
+             ["FaceNet (InceptionResnetV1)", "Trích đặc trưng — đang dùng mặc định; đồng "
+              "thời là mô hình thầy lúc chưng cất", "107 MB", "Huấn luyện sẵn trên VGGFace2"],
+             ["Face Landmarker", "Lưới 478 điểm mốc, dùng để tính EAR cho chống giả mạo",
+              "3,8 MB", "MediaPipe"],
+             ["Hand Landmarker", "21 điểm mốc bàn tay cho chức năng nhận diện cử chỉ",
+              "7,8 MB", "MediaPipe"]]),
+    ("cap", "Bảng 3.7. Toàn bộ mô hình có trong hệ thống và vai trò của từng mô hình"),
+    ("p", "Mô hình phân tích kết cấu ảnh dùng cho chống giả mạo thụ động vẫn còn trong kho "
+          "mã nhưng **đã bị loại khỏi cấu hình mặc định**, vì lý do trình bày ở mục 3.1.9. "
+          "Hai mô hình ResNet50 thử nghiệm ở giai đoạn đầu cũng không được dùng: chúng chỉ "
+          "đạt tỉ lệ xác thực đúng 0,37 và 0,29, thấp hơn hẳn MobileFaceNet trong khi nặng "
+          "gấp hai mươi lần, nên nhóm chuyển hẳn sang kiến trúc nhẹ."),
 
     ("h3", "3.1.8. Một sai lầm về giao thức đánh giá và cách phát hiện"),
     ("p", "Trong lúc tổng hợp số liệu cho báo cáo, nhóm phát hiện các kết quả open-set "
@@ -205,7 +254,7 @@ CHUONG_3 = [
              ["Chưng cất · LFW", "0,2308", "0,5791", "2,51 lần"],
              ["Chưng cất · CASIA+LFW", "0,2759", "0,7199", "2,61 lần"],
              ["FaceNet (thầy)", "0,7860", "0,8513", "1,08 lần"]]),
-    ("cap", "Bảng 3.6. Ảnh hưởng của nguồn ảnh kiểm tra lên chỉ số open-set"),
+    ("cap", "Bảng 3.8. Ảnh hưởng của nguồn ảnh kiểm tra lên chỉ số open-set"),
     ("p", "Tác hại **không đều giữa các mô hình**, và chính sự không đều đó chỉ ra nguyên "
           "nhân. Mô hình thầy gần như không bị ảnh hưởng vì được huấn luyện trên 3,3 "
           "triệu ảnh rất đa dạng nên chịu được biến dạng lạ. Các mô hình do nhóm huấn "
@@ -242,7 +291,7 @@ CHUONG_3 = [
              ["Mặt thật", "0,958", "0 %"],
              ["Ảnh in trên giấy", "0,056", "92 %"],
              ["Ảnh trên màn hình", "0,045", "100 %"]]),
-    ("cap", "Bảng 3.7. Kết quả tầng chống giả mạo trên tấn công MÔ PHỎNG"),
+    ("cap", "Bảng 3.9. Kết quả tầng chống giả mạo trên tấn công MÔ PHỎNG"),
     ("p", "**Những con số trên hoàn toàn không phản ánh thực tế, và nhóm đã chứng minh "
           "được điều đó bằng đo đạc.** Ứng dụng có sẵn chức năng đo bằng đòn tấn công "
           "thật: ghi 60 khung hình mặt thật trước camera, rồi giơ điện thoại hiển thị ảnh "
@@ -250,7 +299,7 @@ CHUONG_3 = [
     ("tbl", [["Loại mẫu", "Số khung", "Điểm sống trung bình", "Nhỏ nhất / Lớn nhất"],
              ["Mặt thật", "60", "0,426", "0,01 / 0,94"],
              ["Ảnh trên màn hình điện thoại", "60", "1,000", "1,00 / 1,00"]]),
-    ("cap", "Bảng 3.13. Điểm chống giả mạo đo trên tấn công THẬT"),
+    ("cap", "Bảng 3.10. Điểm chống giả mạo đo trên tấn công THẬT"),
     ("p", "Điểm sống càng cao nghĩa là hệ thống càng tin đó là người thật. Mô hình chấm "
           "**ảnh trên điện thoại thật hơn cả khuôn mặt thật** — nó không kém, nó **ngược "
           "hoàn toàn**."),
@@ -258,7 +307,7 @@ CHUONG_3 = [
              ["APCER — tấn công lọt qua", "100 %", "100 %"],
              ["BPCER — người thật bị chặn oan", "40 %", "100 %"],
              ["ACER", "70 %", "100 %"]]),
-    ("cap", "Bảng 3.14. APCER/BPCER/ACER trên tấn công thật"),
+    ("cap", "Bảng 3.11. APCER/BPCER/ACER trên tấn công thật"),
     ("p", "Không một ngưỡng nào cứu được kết quả này: ở mọi điểm cắt, **toàn bộ** đòn tấn "
           "công đều lọt qua. Đây không phải lỗi hiệu chỉnh ngưỡng mà là sai lầm về bản "
           "chất mô hình."),
@@ -267,7 +316,7 @@ CHUONG_3 = [
     ("tbl", [["Điều kiện đo", "Điểm mặt thật", "Điểm ảnh trên màn hình"],
              ["Lần 1 — ngồi xa, phòng thiếu sáng", "0,426", "1,000"],
              ["Lần 2 — ngồi gần, đủ sáng hơn", "0,995", "1,000"]]),
-    ("cap", "Bảng 3.15. Điểm chống giả mạo thay đổi theo điều kiện chụp, không theo sự sống"),
+    ("cap", "Bảng 3.12. Điểm chống giả mạo thay đổi theo điều kiện chụp, không theo sự sống"),
     ("p", "Điểm của khuôn mặt thật **nhảy từ 0,426 lên 0,995** chỉ vì đổi khoảng cách và "
           "ánh sáng, trong khi điểm của đòn tấn công đứng yên ở mức tối đa cả hai lần. "
           "Đại lượng mà mô hình thực sự học được **không phải sự sống mà là chất lượng "
@@ -284,7 +333,7 @@ CHUONG_3 = [
           "khi mô hình đầu tiên từ chối oan 56,40 % ảnh thật, và tưởng đã khắc phục xong "
           "bằng kỹ thuật khai thác mẫu khó. Nhưng những mẫu khó đó **cũng do nhóm tự sinh "
           "ra**, nên chúng chỉ vá được lỗ hổng bên trong chính thế giới mô phỏng. Con số "
-          "ACER 0,13 % ở Bảng 3.7 vì vậy không có giá trị dự báo nào về thực tế, và được "
+          "ACER 0,13 % ở Bảng 3.9 vì vậy không có giá trị dự báo nào về thực tế, và được "
           "giữ lại trong báo cáo chỉ để làm đối chứng cho bài học này."),
     ("p", "**Hướng khắc phục.** Hệ thống có sẵn một phương pháp thứ hai không phụ thuộc "
           "kết cấu ảnh: phát hiện **chớp mắt**, đo tỉ lệ khép mí qua nhiều khung hình liên "
@@ -300,11 +349,53 @@ CHUONG_3 = [
     ("tbl", [["Phương pháp", "Mặt thật", "Màn hình", "APCER", "BPCER", "ACER"],
              ["Kết cấu ảnh", "0,426–0,995", "1,000", "100 %", "0–40 %", "50–70 %"],
              ["Chớp mắt", "1,000", "0,000", "0 %", "0 %", "0 %"]]),
-    ("cap", "Bảng 3.16. So sánh hai phương pháp chống giả mạo trên tấn công thật"),
+    ("cap", "Bảng 3.13. So sánh hai phương pháp chống giả mạo trên tấn công thật"),
     ("p", "Phân tách tuyệt đối, không một khung hình nào chồng lấn. Điều này khẳng định "
           "nhận định ở trên: kết cấu ảnh chỉ là dấu hiệu **tương quan** với sự sống, và "
           "tương quan ấy đảo chiều ngay khi điều kiện chụp thay đổi; còn chuyển động mí "
           "mắt là dấu hiệu **nhân quả**."),
+    ("p", "**Cơ chế phát hiện hoạt động như thế nào.** Mỗi khung hình, bộ dò điểm mốc "
+          "khuôn mặt trả về lưới 478 điểm. Sáu điểm quanh mỗi mắt được dùng để tính tỉ lệ "
+          "khung hình mắt EAR — tỉ số giữa chiều cao và chiều rộng của mắt:"),
+    ("cmd", "EAR = ( |p2-p6| + |p3-p5| ) / ( 2 * |p1-p4| )"),
+    ("p", "trong đó p1 và p4 là hai khoé mắt, còn bốn điểm còn lại nằm trên mí trên và mí "
+          "dưới. Mắt mở cho EAR lớn, lúc chớp thì tụt xuống rồi bật lại. Giá trị dùng để "
+          "quyết định là trung bình EAR của hai mắt."),
+    ("p", "Điểm mấu chốt là hệ thống **không bắt trạng thái \"đang nhắm\"** mà bắt trọn "
+          "chuỗi **mở → nhắm → mở**. Lý do: một tấm ảnh chụp người đang nhắm mắt cũng cho "
+          "EAR thấp, và thấp mãi mãi. Chỉ có chuyển động mí mới sinh ra được chuỗi ba "
+          "trạng thái ấy."),
+    ("p", "Ngưỡng nhắm/mở **không phải số tuyệt đối** mà tính theo tỉ lệ so với đường nền "
+          "EAR của chính khuôn mặt đang xét, lấy bằng phân vị 80 của 90 mẫu gần nhất. Lý "
+          "do phải làm vậy đã đo được cụ thể và trình bày ở mục 3.1.16: cùng một đôi mắt "
+          "luôn mở, chỉ đổi cỡ khuôn mặt trong khung hình, EAR đo được đã chạy từ 0,112 "
+          "tới 0,212 — nghĩa là một ngưỡng cố định lấy từ tài liệu sẽ kết tội oan người "
+          "ngồi xa camera."),
+    ("p", "Bên cạnh chớp mắt, hệ thống đo thêm một dấu hiệu thứ hai: **mắt có đứng im hay "
+          "không**. Mắt người không bao giờ bất động — kể cả giữa hai nhịp chớp vẫn có "
+          "rung mắt, đảo mắt và nheo nhẹ theo ánh sáng, nên EAR luôn dao động. Một tấm "
+          "ảnh thì EAR gần như là hằng số. Hệ số biến thiên của EAR trên 45 khung gần "
+          "nhất dưới 0,020 được coi là ảnh tĩnh. Dấu hiệu này bắt được ảnh in và ảnh trên "
+          "màn hình **trước khi** người dùng kịp chớp mắt, nên rút ngắn thời gian chờ."),
+    ("tbl", [["Tham số", "Giá trị", "Ý nghĩa"],
+             ["Tỉ lệ nhắm", "0,72 × đường nền", "EAR tụt dưới mức này coi là đang nhắm"],
+             ["Tỉ lệ mở", "0,85 × đường nền", "Bật lại trên mức này là hoàn tất một lần chớp"],
+             ["EAR sàn", "0,06", "Dưới mức này coi là đo hỏng, không phải mắt nhắm"],
+             ["Số mẫu tối thiểu", "90 khung", "Chưa đủ thì trả \"chưa đo được\", không kết tội"],
+             ["Hiệu lực một lần chớp", "15 giây", "Quá hạn phải chớp lại"],
+             ["Hạn sống của ô theo dõi", "0,6 giây", "Mất mặt quá hạn thì xoá cả lịch sử chớp"],
+             ["Ngưỡng mắt đứng im", "0,020", "Hệ số biến thiên EAR trên 45 khung"],
+             ["Thời gian chờ", "3 – 12 giây", "Nội suy theo mức chuyển động đo được"]]),
+    ("cap", "Bảng 3.14. Tham số của bộ phát hiện chớp mắt"),
+    ("p", "Hai chi tiết còn lại đều sinh ra từ lỗi gặp khi người dùng thật thử phá hệ "
+          "thống, trình bày kỹ ở mục 3.1.16. Thứ nhất, bằng chứng chớp mắt gắn vào **một "
+          "khuôn mặt được theo dõi liên tục**, không gắn vào một vị trí trên màn hình: ô "
+          "theo dõi không thấy mặt quá 0,6 giây là bị xoá cùng toàn bộ lịch sử, chặn đòn "
+          "chớp mắt xong hạ mặt xuống rồi giơ ảnh vào đúng chỗ vừa rời đi. Thứ hai, hệ "
+          "thống phân biệt rõ **\"chưa đo được\"** với **\"là giả\"**: khi số mẫu chưa đủ, "
+          "điểm sống trả về giá trị âm quy ước và giao diện hiển thị khung vàng kèm chữ "
+          "\"đang kiểm tra\" chứ không kết tội giả mạo."),
+
     ("p", "**Một hệ quả kiến trúc quan trọng.** Phát hiện chớp mắt là tín hiệu theo thời "
           "gian, đòi hỏi cả một chuỗi khung hình. Máy chủ chỉ nhận **một tấm ảnh** mỗi "
           "lần điểm danh nên về nguyên tắc không thể tự kiểm tra liveness — đây là giới "
@@ -355,7 +446,7 @@ CHUONG_3 = [
              ["0,020 – 0,025", "67", "0,970"],
              ["0,025 – 0,035", "151", "0,980"],
              ["trên 0,060", "115", "0,991"]]),
-    ("cap", "Bảng 3.11. Quan hệ giữa độ nét ảnh và tỉ lệ nhận diện đúng"),
+    ("cap", "Bảng 3.15. Quan hệ giữa độ nét ảnh và tỉ lệ nhận diện đúng"),
     ("p", "Độ chính xác **chỉ sụt thật sự dưới 0,010**. Ngưỡng cũ 0,025 loại 146 trên 632 "
           "ảnh, tức 23 %, trong khi những ảnh ấy vẫn nhận đúng tới khoảng 96 %. Ngưỡng "
           "được hạ xuống **0,010** và thí nghiệm cắt bỏ chạy lại:"),
@@ -364,7 +455,7 @@ CHUONG_3 = [
              ["Người không đăng ký nổi", "7 trên 122", "0 trên 122"],
              ["rank-1 so với không lọc", "−0,0111", "±0,0000"],
              ["DIR@FAR=1% so với không lọc", "+0,0508", "±0,0000"]]),
-    ("cap", "Bảng 3.12. Cổng chất lượng ở hai ngưỡng khác nhau"),
+    ("cap", "Bảng 3.16. Cổng chất lượng ở hai ngưỡng khác nhau"),
     ("p", "Đây là kết luận đáng ghi nhận nhất của thí nghiệm này: **toàn bộ lợi ích 5,1 "
           "điểm open-set mà cổng chất lượng từng mang lại đều đến từ việc nó loại rất "
           "gắt.** Nới ngưỡng vừa đủ để hệ thống dùng được ngoài đời thì lợi ích đo được "
@@ -404,7 +495,7 @@ CHUONG_3 = [
              ["Bám vết", "Mỗi vết chỉ phát đúng một sự kiện", "Đứng 30 giây trước camera vẫn chỉ tạo 1 sự kiện"],
              ["Kiosk", "Nhớ 60 giây gần nhất theo tên", "Lưu lượng mạng vô ích"],
              ["Cơ sở dữ liệu", "Ràng buộc duy nhất theo ngày", "Mọi trường hợp còn lại, kể cả sau khi đồng bộ hàng đợi"]]),
-    ("cap", "Bảng 3.8. Ba tầng chống ghi trùng bản ghi điểm danh"),
+    ("cap", "Bảng 3.17. Ba tầng chống ghi trùng bản ghi điểm danh"),
     ("p", "Ba tầng độc lập nhau có chủ đích: hai tầng trên là tối ưu hiệu năng, tầng dưới "
           "cùng mới là chốt chặn đúng nghĩa, vẫn giữ được tính đúng đắn ngay cả khi hai "
           "tầng trên bị lỗi."),
@@ -446,7 +537,7 @@ CHUONG_3 = [
              ["Có PyTorch (bản CPU)", "1,92 GB", "9,1 ms"],
              ["Chỉ ONNX Runtime", "941 MB", "4,7 ms"],
              ["Giao diện web (nginx)", "74,4 MB", "—"]]),
-    ("cap", "Bảng 3.9. Dung lượng ảnh triển khai đo được"),
+    ("cap", "Bảng 3.18. Dung lượng ảnh triển khai đo được"),
     ("p", "Việc xuất mô hình sang ONNX vì vậy không phải một bước làm cho đẹp mà là một "
           "phần của kiến trúc triển khai: nó quyết định đồng thời dung lượng cần tải về "
           "và tốc độ xử lý mỗi khuôn mặt."),
@@ -492,7 +583,7 @@ CHUONG_3 = [
              ["Kiểm thử kênh thời gian thực", "5", "WebSocket qua nginx, xác thực, đẩy sự kiện"],
              ["Kiểm thử vết chờ xác minh", "6", "Chỗ nối giữa nhận diện và chống giả mạo"],
              ["Kiểm thử số liệu tổng hợp", "12", "Đơn vị đếm và các đẳng thức giữa các ô số liệu"]]),
-    ("cap", "Bảng 3.10. Bảy bộ kiểm thử tự động của hệ thống"),
+    ("cap", "Bảng 3.19. Bảy bộ kiểm thử tự động của hệ thống"),
     ("p", "Hai bộ cuối gọi qua HTTP vào hệ thống đã triển khai, trong đó có phép thử xác "
           "nhận cổng của máy chủ API **không** truy cập được từ bên ngoài. Trong quá "
           "trình chạy lại toàn bộ, nhóm còn phát hiện một lỗi của chính bộ kiểm thử: nó "
@@ -602,10 +693,14 @@ KET_LUAN = [
           "hàng đợi trên đĩa, và có đủ cả ứng dụng máy tính lẫn giao diện web quản trị. "
           "Toàn bộ được đóng gói bằng Docker, khởi động bằng một lệnh."),
     ("p", "Về công nghệ, nhóm đã tự huấn luyện mạng trích đặc trưng bằng hàm mất mát "
-          "ArcFace thay vì dùng lại mô hình có sẵn làm lõi. Mô hình cuối cùng, thu được "
-          "qua chưng cất tri thức trên 112 nghìn ảnh, đạt tỉ lệ đúng hạng nhất **0,9778** "
-          "so với **0,9842** của mô hình thầy, trong khi **nhẹ hơn 22 lần** và **nhanh "
-          "hơn 17,7 lần**. Hệ thống được đánh giá theo ba giao thức chuẩn với dữ liệu "
+          "ArcFace thay vì dùng lại mô hình có sẵn làm lõi. Mô hình tốt nhất do nhóm "
+          "huấn luyện, thu được qua chưng cất tri thức trên 112 nghìn ảnh, đạt tỉ lệ "
+          "đúng hạng nhất **0,9778** so với **0,9842** của mô hình thầy, trong khi "
+          "**nhẹ hơn 22 lần** và **nhanh hơn 17,7 lần**. Cần nói rõ để tránh hiểu nhầm: "
+          "cấu hình mặc định của sản phẩm vẫn đang chạy mô hình thầy FaceNet vì nó chính "
+          "xác hơn và máy thử nghiệm có card đồ hoạ; mô hình do nhóm huấn luyện là lựa "
+          "chọn cho máy yếu, đổi được ngay trong Bảng điều khiển. Hệ thống được đánh giá "
+          "theo ba giao thức chuẩn với dữ liệu "
           "chia theo danh tính, và mỗi thành phần trong chuỗi xử lý đều được chứng minh "
           "đóng góp bằng thí nghiệm cắt bỏ."),
     ("p", "**Về những gì chưa làm được.** Báo cáo nêu rõ các hạn chế còn tồn tại thay vì "
@@ -672,4 +767,54 @@ KET_LUAN = [
           "dùng được cho chấm công doanh nghiệp; xây dựng ứng dụng di động cho phép giảng "
           "viên xem báo cáo và điểm danh bổ sung; và tích hợp với hệ thống quản lý đào "
           "tạo sẵn có của nhà trường để bản ghi điểm danh chảy thẳng vào sổ điểm."),
+]
+
+
+# ---------------------------------------------------------------- PHỤ LỤC
+#: Phụ lục chỉ chứa thứ không thuộc về thân bài: địa chỉ mã nguồn, cách chạy
+#: lại, và bảng tra cứu tệp. Số liệu và lập luận đều nằm ở Chương 3.
+PHU_LUC = [
+    ("h2", "A. Mã nguồn"),
+    ("p", "Toàn bộ mã nguồn của đề tài được công bố tại:"),
+    ("p", "**https://github.com/thanhvuaws-jpg/XULYANHVATHIGIACMAYTINH**"),
+    ("p", "Kho mã chứa mã nguồn, cấu hình triển khai, bộ kiểm thử và bốn mô hình đã "
+          "huấn luyện ở định dạng ONNX, nên tải về là chạy được ngay mà không phải huấn "
+          "luyện lại. Ba nhóm tệp **không** được đưa lên kho công khai, và lý do của từng "
+          "nhóm:"),
+    ("li", "**Khoá bí mật** (tệp cấu hình môi trường thật). Khoá này dùng để ký thẻ đăng "
+           "nhập; công bố nó đồng nghĩa với việc người ngoài tự tạo được thẻ quản trị hợp "
+           "lệ. Kho chỉ chứa tệp mẫu với giá trị để trống."),
+    ("li", "**Dữ liệu sinh trắc học và thông tin cá nhân**: ảnh khuôn mặt thật đã đăng ký, "
+           "ảnh chụp lúc điểm danh, và các tài liệu có họ tên kèm mã số sinh viên. Đây là "
+           "dữ liệu cá nhân của người thật nên không được công bố."),
+    ("li", "**Tệp nặng và tệp sinh lại được**: hai bộ dữ liệu huấn luyện gần 4 GB, thư "
+           "viện của giao diện web, và các tệp trọng số PyTorch khoảng 98 MB mỗi tệp."),
+
+    ("h2", "B. Cách chạy lại hệ thống"),
+    ("p", "**Chạy bằng Docker** — cách được khuyến nghị, không cần cài Python:"),
+    ("cmd", "cd deploy && docker compose up -d"),
+    ("p", "Sau khi các container báo trạng thái khoẻ mạnh, mở trình duyệt vào địa chỉ máy "
+          "chủ ở cổng được khai báo trong tệp cấu hình môi trường. Tài khoản quản trị "
+          "mặc định được tạo ở lần chạy đầu và phải đổi mật khẩu ngay sau khi đăng nhập."),
+    ("p", "**Chạy ứng dụng máy tính** (cần camera):"),
+    ("cmd", "pip install -r requirements.txt"),
+    ("cmd", "python desktop_app.py"),
+    ("p", "**Chạy bộ kiểm thử:**"),
+    ("cmd", "python -m backend.tests.test_flow"),
+    ("p", "Tương tự với sáu bộ còn lại liệt kê ở Bảng 3.19. Hai bộ kiểm thử kênh thời "
+          "gian thực và kiểm thử khói cần hệ thống đã được triển khai bằng Docker "
+          "trước đó."),
+
+    ("h2", "C. Bảng tra cứu các thư mục chính trong kho mã"),
+    ("tbl", [["Thư mục", "Nội dung"],
+             ["engine/", "Chuỗi xử lý ảnh: phát hiện, cổng chất lượng, căn chỉnh, chống "
+                         "giả mạo, trích đặc trưng, chỉ mục vector, bám vết"],
+             ["backend/", "Máy chủ API, cơ sở dữ liệu, nghiệp vụ điểm danh, bộ kiểm thử"],
+             ["web/", "Giao diện web quản trị"],
+             ["training/", "Các chương trình huấn luyện, chưng cất và đánh giá mô hình"],
+             ["deploy/", "Cấu hình Docker, nginx và tệp môi trường mẫu"],
+             ["report/", "Chương trình sinh báo cáo này từ mẫu của trường"],
+             ["models/", "Mô hình đã huấn luyện ở định dạng ONNX"],
+             ["desktop_app.py", "Ứng dụng máy tính: kiosk, đăng ký, nhận diện, cử chỉ tay"]]),
+    ("cap", "Bảng A.1. Các thư mục chính trong kho mã nguồn"),
 ]

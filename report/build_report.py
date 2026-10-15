@@ -15,14 +15,17 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from report.docx_tools import (add_page_break, build_table, clone_paragraph,
-                               insert_after, insert_image, set_text)
+from report.docx_tools import (_strip_runs, add_page_break, build_table,
+                               clone_paragraph, insert_after, insert_image,
+                               set_text, style_cell)
 from report.noidung_c1_c2 import CHUONG_1, CHUONG_2, MO_DAU
-from report.noidung_c3 import CHUONG_3, MO_DAU_32, GIAO_DIEN, KET_LUAN
+from report.noidung_c3 import (CHUONG_3, GIAO_DIEN, KET_LUAN, MO_DAU_32,
+                               PHU_LUC)
 from report.noidung_c3b import NGUOI_DUNG_THAT
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -162,6 +165,22 @@ class Builder:
         set_text(p, text, italic=True, size=12)
         return self._put(p)
 
+    def dong_lenh(self, text):
+        """Một dòng lệnh gõ vào terminal.
+
+        Dùng phông đơn cách để phân biệt rõ với văn xuôi — trong câu lệnh thì
+        dấu gạch, dấu chấm và khoảng trắng đều mang nghĩa, nên không được để
+        phông chữ có chân làm người đọc gõ nhầm.
+        """
+        p = clone_paragraph(self.refs["than"])
+        pf = p.paragraph_format
+        pf.first_line_indent = Cm(0)
+        pf.left_indent = Cm(1.0)
+        pf.line_spacing = 1.0
+        pf.space_before, pf.space_after = Pt(3), Pt(6)
+        set_text(p, text, size=12, font="Consolas")
+        return self._put(p)
+
     def trong(self, pts=6):
         p = clone_paragraph(self.refs["than"])
         p.paragraph_format.space_after = Pt(pts)
@@ -182,6 +201,19 @@ class Builder:
         p.paragraph_format.space_after = Pt(2)
         p.paragraph_format.line_spacing = 1.0
         t._tbl.addnext(p._p)
+        # Giữ CẢ BẢNG dính với chú thích của nó thành một khối. Chỉ ràng buộc
+        # hàng cuối thì Word vẫn cắt bảng ở giữa rồi đẩy hàng cuối kèm chú thích
+        # sang trang sau — bảng bị xé làm đôi còn khó đọc hơn chú thích lạc chỗ.
+        # Đây là ràng buộc mềm: bảng dài hơn một trang thì Word vẫn buộc phải cắt.
+        for hang in t.rows:
+            # Không cho một hàng tự vỡ đôi giữa hai trang.
+            trPr = hang._tr.get_or_add_trPr()
+            if trPr.find(qn("w:cantSplit")) is None:
+                trPr.append(trPr.makeelement(qn("w:cantSplit"), {}))
+            for o in hang.cells:
+                for doan in o.paragraphs:
+                    doan.paragraph_format.keep_with_next = True
+        p.paragraph_format.keep_with_next = True
         self.cur = p
         return t
 
@@ -204,6 +236,8 @@ class Builder:
                 self.anh(val)
             elif kind == "tbl":
                 self.bang(val)
+            elif kind == "cmd":
+                self.dong_lenh(val)
             elif kind == "br":
                 self.ngat_trang()
             else:
@@ -297,18 +331,91 @@ def viet_danh_muc_hinh(doc, anchor, b: "Builder") -> None:
     add_page_break(cur)
 
 
+# --------------------------------------------------------------------- bìa
+#: Thông tin hành chính của bài nộp. Gom vào một chỗ để sửa một lần là xong,
+#: thay vì rải rác trong mã dựng.
+BIA = {
+    "hoc_phan": "XỬ LÝ ẢNH VÀ THỊ GIÁC MÁY TÍNH",
+    "de_tai": "XÂY DỰNG HỆ THỐNG ĐIỂM DANH SINH VIÊN BẰNG NHẬN DIỆN KHUÔN MẶT",
+    "gvhd": "Hồ Văn Quý",
+    "nhom": "10",
+    "ma_lop": "010100086904",
+    "thang_nam": "10/2026",
+}
+
+#: (họ tên, MSSV, lớp, ghi chú)
+THANH_VIEN = [
+    ("Đàm Thanh Vũ", "2431540219", "24ĐHTT04", "Nhóm trưởng"),
+    ("Hoàng Thuỷ Tiên", "2431540237", "24ĐHTT04", ""),
+    ("Trương Ngọc Tiến", "2431540017", "24ĐHTT01", ""),
+]
+
+
+def dung_bia(doc) -> None:
+    """Điền trang bìa và bảng danh sách nhóm của mẫu.
+
+    Mẫu của trường có **hai trang bìa** nằm trong hai hàng của cùng một bảng:
+    một bản ghi "TP.Hồ Chí Minh", một bản ghi "Thành phố Hồ Chí Minh". Đó là hai
+    phương án để người làm chọn một, không phải hai trang phải nộp cả. Hàm này
+    xoá hàng thứ hai, giữ lại bản đầu.
+
+    Các ô còn tô vàng trong mẫu là chỗ giữ chỗ. Ghi đè bằng cách xoá run cũ rồi
+    ghi run mới nên vệt vàng mất theo, không phải xoá tay từng chỗ.
+    """
+    bang_bia = doc.tables[0]
+    if len(bang_bia.rows) > 1:
+        bang_bia._tbl.remove(bang_bia.rows[-1]._tr)
+
+    o = bang_bia.rows[0].cells[0]
+    dien = {
+        8: (BIA["hoc_phan"], 20.0),
+        9: (BIA["de_tai"], 18.0),
+        12: (f"Giảng viên hướng dẫn: {BIA['gvhd']}", 14.0),
+        13: (f"Sinh viên/ Nhóm sinh viên thực hiện: Nhóm {BIA['nhom']}", 14.0),
+        14: ("Mã số sinh viên: " + ", ".join(t[1] for t in THANH_VIEN), 14.0),
+        15: (f"Lớp: {BIA['ma_lop']}", 14.0),
+        22: (f"TP. Hồ Chí Minh, tháng {BIA['thang_nam']}", 14.0),
+    }
+    for i, (chu, co) in dien.items():
+        doan = o.paragraphs[i]
+        canh = doan.alignment
+        _strip_runs(doan._p)
+        set_text(doan, chu, bold=True, size=co)
+        doan.alignment = canh
+
+    # Tên đề tài dài hơn chỗ giữ chỗ "TÊN ĐỀ TÀI" nên xuống hai dòng, đẩy dòng
+    # địa danh tràn sang trang thứ hai và để lại một trang gần như trống chỉ có
+    # khung viền. Bỏ bớt ba dòng trắng ở cuối ô để bìa gọn lại trong một trang.
+    trong = [d for d in o.paragraphs[16:22] if not d.text.strip()]
+    for d in trong[:3]:
+        d._p.getparent().remove(d._p)
+
+    # Bảng danh sách nhóm: mẫu có sẵn 5 hàng mẫu, nhóm chỉ có 3 người.
+    bang = doc.tables[1]
+    while len(bang.rows) > 1:
+        bang._tbl.remove(bang.rows[-1]._tr)
+    for i, (ten, mssv, lop, ghi_chu) in enumerate(THANH_VIEN, start=1):
+        hang = bang.add_row()
+        style_cell(hang.cells[0], str(i), size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
+        style_cell(hang.cells[1], ten, size=12)
+        style_cell(hang.cells[2], mssv, size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
+        style_cell(hang.cells[3], lop, size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
+        style_cell(hang.cells[4], ghi_chu, size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
+    print(f"  bìa: nhóm {BIA['nhom']}, {len(THANH_VIEN)} thành viên, đã bỏ trang bìa trùng")
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
     doc = Document(str(MAU))
+    dung_bia(doc)
     ps = doc.paragraphs
 
     # ------------------------------------------------ bảng chữ viết tắt (bảng 3)
     tb = doc.tables[3]
     while len(tb.rows) > 1:
         tb._tbl.remove(tb.rows[-1]._tr)
-    from report.docx_tools import style_cell
     style_cell(tb.cell(0, 0), VIET_TAT[0][0], bold=True, size=12,
                align=WD_ALIGN_PARAGRAPH.CENTER)
     style_cell(tb.cell(0, 1), VIET_TAT[0][1], bold=True, size=12,
@@ -335,6 +442,7 @@ def main() -> int:
         "c3": ps[59],           # "CHƯƠNG 3. PHÂN TÍCH HỆ THỐNG…"
         "kl": ps[81],           # "KẾT LUẬN"                    (mang ngắt trang)
         "tl": ps[89],           # "DANH MỤC TÀI LIỆU THAM KHẢO"
+        "pl": ps[97],           # "PHỤ LỤC (nếu có)"
     }
     # Các đoạn hướng dẫn/giữ chỗ của mẫu. KHÔNG đụng tới các đoạn rỗng mang ngắt
     # trang (30, 58, 88, 96) vì chúng giữ bố cục phân trang của mẫu.
@@ -403,6 +511,17 @@ def main() -> int:
     b.cur = moc["kl"]
     b.render(KET_LUAN)
     print(f"  KẾT LUẬN: {len(KET_LUAN)} đoạn")
+
+    # ---------------------------------------------------------------- PHỤ LỤC
+    # Mẫu ghi "PHỤ LỤC (nếu có)" — đó là hướng dẫn cho người làm, không phải tên
+    # đề mục. Có nội dung rồi thì phải bỏ phần trong ngoặc, nếu không mục lục
+    # cũng in nguyên chữ "(nếu có)".
+    _strip_runs(moc["pl"]._p)
+    set_text(moc["pl"], "PHỤ LỤC", bold=True, size=14)
+    moc["pl"].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    b.cur = moc["pl"]
+    b.render(PHU_LUC)
+    print(f"  PHỤ LỤC: {len(PHU_LUC)} khối")
 
     # ------------------------------------------------------- TÀI LIỆU THAM KHẢO
     b.cur = moc["tl"]
