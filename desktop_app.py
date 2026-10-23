@@ -2089,15 +2089,47 @@ class DashboardPage(QWidget):
         self.refresh()
 
     def _rebuild_db(self):
-        """Tạo lại toàn bộ database bằng mô hình đang chọn.
+        """Dựng LẠI TỪ ĐẦU database bằng mô hình đang chọn.
 
-        Đọc lại ảnh gốc trong `data/enrolled/<tên>/` rồi trích đặc trưng lại —
-        nên đổi mô hình lúc nào cũng khôi phục được, miễn còn giữ ảnh gốc.
+        Nguồn sự thật là ảnh gốc trong `data/enrolled/<tên>/`: xoá sạch database
+        rồi trích đặc trưng lại từ những ảnh đó.
+
+        Vì sao phải xoá sạch trước
+        --------------------------
+        Bản cũ chỉ lặp qua từng thư mục rồi gán `db[tên] = vector mới`, nên tên
+        nào **không có thư mục** thì giữ nguyên vector cũ. Sau khi đổi mô hình,
+        database thành hỗn hợp hai không gian vector không so sánh được với nhau
+        — và không có lỗi nào báo ra, vì mô hình nào cũng cho vector 512 chiều.
+        Đo thực tế lúc phát hiện: 46 người trong database, nút này chỉ trích lại
+        được 4, còn 42 người giữ vector của mô hình cũ.
+
+        Dựng lại từ đầu thì không thể còn sót vector lạc mô hình. Đổi lại, ai
+        không còn ảnh gốc sẽ bị loại — nên hỏi trước khi làm.
         """
         folders = self.engine.folders()
         if not folders:
             QMessageBox.information(self, "Chưa có ai", "Chưa có folder nào trong data/enrolled/.")
             return
+
+        # Cảnh báo đúng những tên sắp mất, thay vì cảnh báo chung chung.
+        mat = sorted(set(self.engine.db) - set(folders))
+        if mat:
+            vd = ", ".join(mat[:5]) + (f"… và {len(mat) - 5} người nữa" if len(mat) > 5 else "")
+            tra_loi = QMessageBox.question(
+                self, "Có người không còn ảnh gốc",
+                f"{len(mat)} người đang ở trong database nhưng không có thư mục ảnh "
+                f"trong data/enrolled/:\n\n{vd}\n\n"
+                "Dựng lại sẽ loại họ, vì không có ảnh để trích đặc trưng lại bằng "
+                "mô hình mới. Giữ họ lại thì vector của họ vẫn thuộc mô hình cũ và "
+                "hệ thống sẽ nhận sai một cách âm thầm.\n\nVẫn dựng lại?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No)
+            if tra_loi != QMessageBox.StandardButton.Yes:
+                return
+
+        # Xoá sạch TRƯỚC khi nạp lại.
+        save_db({}, self.engine.db_path)
+        self.engine.reload_db()
         self.log.clear()
         self.log.appendPlainText(f"Dựng lại database bằng {self.cb_backbone.currentText()}\n")
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
@@ -2192,10 +2224,16 @@ class DashboardPage(QWidget):
         # không nói ra điều đó, khiến người xem tưởng hệ thống đếm sai. Mỗi ô nay
         # ghi kèm nguồn số liệu, và có một dòng giải thích quan hệ ở dưới.
         so_db = len(self.engine.db)
+        # Hai nhóm số liệu TÁCH BẠCH, đừng cộng lẫn vào nhau:
+        #   - Hai ô đầu: dữ liệu HUẤN LUYỆN mô hình. Người trong đó không phải
+        #     người hệ thống cần nhận ra; họ là ảnh nghiên cứu (bộ LFW).
+        #   - Hai ô sau: người ĐĂNG KÝ THẬT. Đây mới là danh sách nhận diện.
+        # Lẫn hai nhóm là nguồn gốc của mớ lộn xộn cũ: database từng chứa cả 42
+        # người LFW, và khi đổi mô hình thì 42 người đó giữ vector của mô hình cũ.
         cac_o = [
-            (pa, "người có sẵn trong bộ dữ liệu", "data/aligned/", CY),
-            (ia, "ảnh của những người đó", "đã cắt và căn chỉnh", VI),
-            (pe, "người tự đăng ký thêm", "data/enrolled/", EM),
+            (pa, "người trong dữ liệu huấn luyện", "data/aligned/ · không để nhận diện", CY),
+            (ia, "ảnh dùng để huấn luyện", "đã cắt và căn chỉnh", VI),
+            (pe, "người đã đăng ký", "data/enrolled/ · có ảnh gốc", EM),
             (so_db, "người hệ thống nhận ra được", "db/embeddings.pkl", AM),
         ]
         for v, k, nguon, col in cac_o:
@@ -2210,15 +2248,17 @@ class DashboardPage(QWidget):
         # Kiểm tra ngay tại chỗ thay vì bắt người dùng tự cộng: nếu tổng không
         # khớp thì gần như chắc chắn là quên bấm "Dựng lại database" sau khi
         # thêm người — lỗi này không có thông báo nào khác.
-        if so_db == pa + pe:
-            ghi_chu = (f"<b>{so_db}</b> = {pa} + {pe} — khớp. Ô cuối là tổng ô thứ "
-                       f"nhất và ô thứ ba: ai có mặt ở một trong hai nơi thì đều nhận "
-                       f"ra được. Ô thứ hai đếm <b>ảnh</b>, không phải người, nên không "
-                       f"vào tổng.")
+        if so_db == pe:
+            ghi_chu = (f"Hai ô đầu là <b>dữ liệu huấn luyện mô hình</b>, hai ô sau là "
+                       f"<b>người hệ thống nhận diện</b> — hai việc khác nhau, không "
+                       f"cộng vào nhau. Ô thứ ba và ô thứ tư phải bằng nhau: "
+                       f"<b>{pe} = {so_db}</b>, khớp.")
         else:
-            ghi_chu = (f"<b style='color:{AM}'>Lệch:</b> {pa} + {pe} = {pa + pe} nhưng "
-                       f"database chỉ có {so_db}. Nhiều khả năng đã thêm hoặc xoá người "
-                       f"mà chưa bấm <b>Dựng lại database</b>.")
+            thieu = sorted(set(self.engine.db) ^ set(self.engine.folders()))
+            ghi_chu = (f"<b style='color:{AM}'>Lệch:</b> có {pe} người đã đăng ký nhưng "
+                       f"database chứa {so_db}. Chênh ở: {', '.join(thieu[:6])}"
+                       f"{'…' if len(thieu) > 6 else ''}. Bấm <b>Dựng lại database</b> "
+                       f"để đồng bộ.")
         self.lbl_quan_he.setText(ghi_chu)
 
         import json

@@ -53,3 +53,11 @@ data/
 node_modules/
 web/dist/
 *.log
+
+# Bản sao lưu database — chứa vector khuôn mặt của người thật, không khác gì
+# dữ liệu sinh trắc học ở mục 2 bên trên.
+*.pkl.bak
+db/*.bak
+
+# Tệp khoá tạm Word tạo ra khi đang mở tài liệu.
+~$*
