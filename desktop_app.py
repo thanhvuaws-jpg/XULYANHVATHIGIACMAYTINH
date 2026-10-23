@@ -2005,6 +2005,11 @@ class DashboardPage(QWidget):
 
         self.stats = QHBoxLayout(); self.stats.setSpacing(12)
         root.addLayout(self.stats)
+        # Dòng đối chiếu bốn con số trên. Tạo sẵn ở đây rồi refresh() chỉ ghi chữ
+        # vào, vì refresh() xoá và dựng lại cả hàng ô mỗi lần chạy.
+        self.lbl_quan_he = QLabel(); self.lbl_quan_he.setObjectName("Hint")
+        self.lbl_quan_he.setWordWrap(True)
+        root.addWidget(self.lbl_quan_he)
 
         s = QGridLayout(); s.setHorizontalSpacing(10); s.setVerticalSpacing(8)
         self.models = available_models()
@@ -2182,14 +2187,39 @@ class DashboardPage(QWidget):
 
         pa, ia = count_tree(config.ALIGNED_DIR)
         pe, _ = count_tree(config.ENROLLED_DIR)
-        for v, k, col in [(pa, "người (đã align)", CY), (ia, "ảnh khuôn mặt", VI),
-                          (pe, "folder đã đăng ký", EM), (len(self.engine.db), "người trong DB", AM)]:
+        # Bốn ô này đếm BỐN THỨ KHÁC NHAU ở ba nơi khác nhau trên đĩa, nên con số
+        # lệch nhau là bình thường. Nhãn cũ ("người (đã align)", "người trong DB")
+        # không nói ra điều đó, khiến người xem tưởng hệ thống đếm sai. Mỗi ô nay
+        # ghi kèm nguồn số liệu, và có một dòng giải thích quan hệ ở dưới.
+        so_db = len(self.engine.db)
+        cac_o = [
+            (pa, "người có sẵn trong bộ dữ liệu", "data/aligned/", CY),
+            (ia, "ảnh của những người đó", "đã cắt và căn chỉnh", VI),
+            (pe, "người tự đăng ký thêm", "data/enrolled/", EM),
+            (so_db, "người hệ thống nhận ra được", "db/embeddings.pkl", AM),
+        ]
+        for v, k, nguon, col in cac_o:
             f = QFrame(); f.setObjectName("Stat")
             lay = QVBoxLayout(f); lay.setContentsMargins(16, 12, 16, 12); lay.setSpacing(2)
             a = QLabel(str(v)); a.setObjectName("StatV"); a.setStyleSheet(f"color:{col};")
             b = QLabel(k); b.setObjectName("StatK")
-            lay.addWidget(a); lay.addWidget(b)
+            c = QLabel(nguon); c.setObjectName("Hint")
+            lay.addWidget(a); lay.addWidget(b); lay.addWidget(c)
             self.stats.addWidget(f)
+
+        # Kiểm tra ngay tại chỗ thay vì bắt người dùng tự cộng: nếu tổng không
+        # khớp thì gần như chắc chắn là quên bấm "Dựng lại database" sau khi
+        # thêm người — lỗi này không có thông báo nào khác.
+        if so_db == pa + pe:
+            ghi_chu = (f"<b>{so_db}</b> = {pa} + {pe} — khớp. Ô cuối là tổng ô thứ "
+                       f"nhất và ô thứ ba: ai có mặt ở một trong hai nơi thì đều nhận "
+                       f"ra được. Ô thứ hai đếm <b>ảnh</b>, không phải người, nên không "
+                       f"vào tổng.")
+        else:
+            ghi_chu = (f"<b style='color:{AM}'>Lệch:</b> {pa} + {pe} = {pa + pe} nhưng "
+                       f"database chỉ có {so_db}. Nhiều khả năng đã thêm hoặc xoá người "
+                       f"mà chưa bấm <b>Dựng lại database</b>.")
+        self.lbl_quan_he.setText(ghi_chu)
 
         import json
         # Liệt kê CẢ .onnx lẫn .pt. Mã cũ chỉ quét .pt nên bảng chỉ hiện đúng một
