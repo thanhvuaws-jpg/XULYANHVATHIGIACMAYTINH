@@ -574,7 +574,7 @@ CHUONG_3 = [
           "vào máy chủ đúng lúc nó vừa khởi động lại và còn đang nạp mô hình."),
 
     ("h3", "3.1.15. Kiểm thử"),
-    ("p", "Hệ thống có bảy bộ kiểm thử tự động với tổng cộng **85 phép thử, tất cả đều đạt**:"),
+    ("p", "Hệ thống có tám bộ kiểm thử tự động với tổng cộng **106 phép thử, tất cả đều đạt**:"),
     ("tbl", [["Bộ kiểm thử", "Số phép thử", "Phạm vi kiểm chứng"],
              ["Kiểm tra không phụ thuộc PyTorch", "6", "Không có khai báo nhập khẩu nào kéo PyTorch vào"],
              ["Kiểm thử luồng nghiệp vụ", "25", "Phân quyền, đăng ký, nhận diện, điểm danh, báo cáo"],
@@ -582,8 +582,9 @@ CHUONG_3 = [
              ["Kiểm thử khói hệ thống triển khai", "20", "Ảnh Docker, nginx, biến môi trường, lưu trữ"],
              ["Kiểm thử kênh thời gian thực", "5", "WebSocket qua nginx, xác thực, đẩy sự kiện"],
              ["Kiểm thử vết chờ xác minh", "6", "Chỗ nối giữa nhận diện và chống giả mạo"],
-             ["Kiểm thử số liệu tổng hợp", "12", "Đơn vị đếm và các đẳng thức giữa các ô số liệu"]]),
-    ("cap", "Bảng 3.19. Bảy bộ kiểm thử tự động của hệ thống"),
+             ["Kiểm thử số liệu tổng hợp", "12", "Đơn vị đếm và các đẳng thức giữa các ô số liệu"],
+             ["Kiểm thử đường dẫn có dấu", "21", "Đọc và ghi ảnh ở thư mục đặt tên tiếng Việt"]]),
+    ("cap", "Bảng 3.19. Tám bộ kiểm thử tự động của hệ thống"),
     ("p", "Hai bộ cuối gọi qua HTTP vào hệ thống đã triển khai, trong đó có phép thử xác "
           "nhận cổng của máy chủ API **không** truy cập được từ bên ngoài. Trong quá "
           "trình chạy lại toàn bộ, nhóm còn phát hiện một lỗi của chính bộ kiểm thử: nó "

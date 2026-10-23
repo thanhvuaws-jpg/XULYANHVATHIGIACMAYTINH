@@ -201,18 +201,26 @@ class Builder:
         p.paragraph_format.space_after = Pt(2)
         p.paragraph_format.line_spacing = 1.0
         t._tbl.addnext(p._p)
-        # Giữ CẢ BẢNG dính với chú thích của nó thành một khối. Chỉ ràng buộc
-        # hàng cuối thì Word vẫn cắt bảng ở giữa rồi đẩy hàng cuối kèm chú thích
-        # sang trang sau — bảng bị xé làm đôi còn khó đọc hơn chú thích lạc chỗ.
-        # Đây là ràng buộc mềm: bảng dài hơn một trang thì Word vẫn buộc phải cắt.
+        # Hai ràng buộc, và CHỈ hai — đặt nhiều hơn là Word treo.
+        #
+        #   1. `cantSplit` trên mọi hàng: không cho một hàng tự vỡ đôi giữa hai
+        #      trang. Rẻ và an toàn.
+        #   2. `keep_with_next` trên HÀNG CUỐI và đoạn đệm: để chú thích luôn
+        #      đi theo bảng, không trôi sang trang sau đứng trơ một mình.
+        #
+        # Bản trước đặt `keep_with_next` lên MỌI hàng với ý giữ cả bảng trong
+        # một trang. Hậu quả: khi bảng cao hơn một trang — bảng bộ kiểm thử sau
+        # khi thêm một dòng là vừa đúng trường hợp đó — Word không thoả mãn nổi
+        # ràng buộc và **treo vô hạn** lúc mở tệp. Không báo lỗi, chỉ đứng im;
+        # phải tự tay tắt tiến trình. Bảng bị cắt ngang trang thì xấu, nhưng tệp
+        # không mở được thì hỏng hẳn.
         for hang in t.rows:
-            # Không cho một hàng tự vỡ đôi giữa hai trang.
             trPr = hang._tr.get_or_add_trPr()
             if trPr.find(qn("w:cantSplit")) is None:
                 trPr.append(trPr.makeelement(qn("w:cantSplit"), {}))
-            for o in hang.cells:
-                for doan in o.paragraphs:
-                    doan.paragraph_format.keep_with_next = True
+        for o in t.rows[-1].cells:
+            for doan in o.paragraphs:
+                doan.paragraph_format.keep_with_next = True
         p.paragraph_format.keep_with_next = True
         self.cur = p
         return t

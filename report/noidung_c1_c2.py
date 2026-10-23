@@ -128,8 +128,8 @@ CHUONG_1 = [
           "hiện lúc huấn luyện. Kết quả báo cáo theo ba giao thức chuẩn thay vì một con "
           "số độ chính xác duy nhất. Lý do của lựa chọn này được phân tích ở mục 2.3."),
     ("p", "**Phương pháp phát triển phần mềm.** Xây dựng theo từng bước, mỗi bước có bộ "
-          "kiểm thử tự động chạy được lại bất cứ lúc nào. Hệ thống hoàn chỉnh có bảy bộ "
-          "kiểm thử với tổng cộng 85 phép thử, trong đó hai bộ gọi qua giao thức HTTP "
+          "kiểm thử tự động chạy được lại bất cứ lúc nào. Hệ thống hoàn chỉnh có tám bộ "
+          "kiểm thử với tổng cộng 106 phép thử, trong đó hai bộ gọi qua giao thức HTTP "
           "vào hệ thống đã triển khai thật chứ không gọi vào mã nguồn."),
     ("p", "Phần còn lại của báo cáo được tổ chức như sau."),
     ("p", "**Chương 2** trình bày cơ sở lý thuyết của ba nhóm kỹ thuật được sử dụng. "
