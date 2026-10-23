@@ -715,8 +715,8 @@ KET_LUAN = [
            "phiên đo, một người, một thiết bị tấn công**, và thiết bị đó là màn hình điện "
            "thoại — **ảnh in chưa được đo lại** bằng phương pháp mới. Một điểm yếu nữa "
            "chưa kiểm chứng là người đeo kính dày làm mờ dấu hiệu mí mắt. Riêng video "
-           "quay sẵn thì không phải chuyện chưa đo mà là hạn chế chắc chắn, nêu ở gạch "
-           "đầu dòng cuối."),
+           "quay sẵn thì không phải chuyện chưa đo mà là hạn chế chắc chắn, nêu riêng "
+           "ở một gạch đầu dòng bên dưới."),
     ("li", "**Tầng chống giả mạo chỉ được thực thi ở máy kiosk, không ở máy chủ**, vì nó "
            "cần chuỗi khung hình mà máy chủ không có. Một máy kiosk bị chiếm quyền có thể "
            "bỏ qua bước này — danh tính thì không giả mạo được, nhưng liveness thì có."),
