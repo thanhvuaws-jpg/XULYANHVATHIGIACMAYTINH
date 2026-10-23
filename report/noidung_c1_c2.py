@@ -66,7 +66,10 @@ CHUONG_1 = [
            "trên máy tính phổ thông, nhận diện được nhiều người trong cùng một khung hình."),
     ("li", "Từ chối người chưa đăng ký thay vì gán bừa cho người giống nhất."),
     ("li", "Chặn được tấn công bằng ảnh in và ảnh hiển thị trên màn hình. "
-           "*(Mục tiêu này chưa đạt — xem phân tích ở mục 3.1.9 và phần Kết luận.)*"),
+           "*(Đạt một phần. Phương pháp chớp mắt chặn được ảnh trên màn hình điện thoại "
+           "với ACER 0 % ở phiên đo thực nghiệm, nhưng ảnh in chưa được đo lại bằng "
+           "phương pháp này, và video quay sẵn có người chớp mắt vẫn qua được — xem mục "
+           "3.1.9 và phần Kết luận.)*"),
     ("li", "Ghi bản ghi điểm danh vào cơ sở dữ liệu, phân biệt đúng giờ và đi muộn, "
            "chống ghi trùng, xuất được báo cáo."),
     ("li", "Hoạt động được cả khi mất kết nối mạng: bản ghi xếp hàng trên đĩa và tự đồng "
