@@ -119,14 +119,14 @@ CHUONG_1 = [
           "tra, cùng một chỉ số**, và chỉ được giữ lại nếu số đo chứng minh nó có ích. "
           "Với các thành phần đã đưa vào hệ thống, nhóm thực hiện thêm thí nghiệm cắt bỏ "
           "(ablation): tắt từng thành phần rồi đo lại, chênh lệch chính là đóng góp thật "
-          "của thành phần đó. Kết quả trình bày ở mục 3.1.7."),
+          "của thành phần đó. Kết quả trình bày ở mục 3.1.10."),
     ("p", "**Phương pháp đánh giá đúng chuẩn.** Tập dữ liệu được chia theo **danh tính** "
           "chứ không theo ảnh, bảo đảm người xuất hiện trong tập kiểm tra chưa từng xuất "
           "hiện lúc huấn luyện. Kết quả báo cáo theo ba giao thức chuẩn thay vì một con "
           "số độ chính xác duy nhất. Lý do của lựa chọn này được phân tích ở mục 2.3."),
     ("p", "**Phương pháp phát triển phần mềm.** Xây dựng theo từng bước, mỗi bước có bộ "
-          "kiểm thử tự động chạy được lại bất cứ lúc nào. Hệ thống hoàn chỉnh có bốn bộ "
-          "kiểm thử với tổng cộng 62 phép thử, trong đó hai bộ gọi qua giao thức HTTP "
+          "kiểm thử tự động chạy được lại bất cứ lúc nào. Hệ thống hoàn chỉnh có bảy bộ "
+          "kiểm thử với tổng cộng 85 phép thử, trong đó hai bộ gọi qua giao thức HTTP "
           "vào hệ thống đã triển khai thật chứ không gọi vào mã nguồn."),
     ("p", "Phần còn lại của báo cáo được tổ chức như sau."),
     ("p", "**Chương 2** trình bày cơ sở lý thuyết của ba nhóm kỹ thuật được sử dụng. "
@@ -304,5 +304,5 @@ CHUONG_2 = [
           "tỉ lệ người thật bị từ chối oan; và **ACER** là trung bình của hai đại lượng "
           "trên. Cần cả ba vì một mô hình từ chối mọi thứ sẽ có APCER bằng không nhưng "
           "hoàn toàn vô dụng — một cạm bẫy mà đề tài đã gặp phải trong thực tế, trình "
-          "bày ở mục 3.1.8."),
+          "bày ở mục 3.1.9."),
 ]

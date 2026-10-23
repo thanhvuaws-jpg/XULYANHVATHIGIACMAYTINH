@@ -750,14 +750,17 @@ KET_LUAN = [
           "vì theo ảnh báo chí."),
     ("p", "Tiếp theo là các hướng mở rộng năng lực hệ thống. Về mặt mô hình, bổ sung ràng "
           "buộc về phân bố khoảng cách trong quá trình chưng cất để thu hẹp khoảng cách "
-          "open-set với mô hình thầy. Về mặt chống giả mạo, bổ sung tín hiệu sinh học "
-          "chủ động như phát hiện nháy mắt hoặc yêu cầu quay đầu, kết hợp với phân tích "
-          "kết cấu hiện có. Về mặt quy mô, thay chỉ mục tìm kiếm tuần tự bằng cấu trúc "
+          "open-set với mô hình thầy. Về mặt chống giả mạo, hướng tiếp theo là **thử "
+          "thách ngẫu nhiên** — yêu cầu quay đầu sang trái hoặc sang phải theo thứ tự "
+          "không đoán trước được — vì phát hiện chớp mắt tuy chặn được ảnh in và ảnh "
+          "trên màn hình nhưng **không chặn được video quay sẵn có người chớp mắt**; kẻ "
+          "tấn công không đoán trước được yêu cầu nào sẽ xuất hiện thì video phát lại "
+          "cũng vô dụng. Về mặt quy mô, thay chỉ mục tìm kiếm tuần tự bằng cấu trúc "
           "đồ thị phân cấp khi số người vượt vài nghìn."),
     ("p", "Về mặt quy trình phát triển, bài học lớn nhất của đề tài là cần đưa **người "
           "dùng thật** vào vòng kiểm thử sớm hơn. Tám lỗi nghiêm trọng nhất chỉ lộ ra khi "
           "có người thật sử dụng, trong khi 73 phép thử tự động đều xanh suốt thời gian "
-          "chúng tồn tại — 73 là số phép thử có vào thời điểm đó, hai bộ cuối ở bảng 3.10 "
+          "chúng tồn tại — 73 là số phép thử có vào thời điểm đó, hai bộ cuối ở Bảng 3.19 "
           "được viết ra chính vì các lỗi này. Hướng cải thiện cụ thể: bổ sung kiểm thử cho **chỗ nối giữa "
           "các tầng chạy ở nhịp thời gian khác nhau**, kiểm thử cho **thao tác chuyển "
           "tiếp** giữa hai trạng thái chứ không chỉ đo từng trạng thái tĩnh, và dựng dữ "
@@ -774,47 +777,14 @@ KET_LUAN = [
 #: Phụ lục chỉ chứa thứ không thuộc về thân bài: địa chỉ mã nguồn, cách chạy
 #: lại, và bảng tra cứu tệp. Số liệu và lập luận đều nằm ở Chương 3.
 PHU_LUC = [
-    ("h2", "A. Mã nguồn"),
     ("p", "Toàn bộ mã nguồn của đề tài được công bố tại:"),
     ("p", "**https://github.com/thanhvuaws-jpg/XULYANHVATHIGIACMAYTINH**"),
     ("p", "Kho mã chứa mã nguồn, cấu hình triển khai, bộ kiểm thử và bốn mô hình đã "
           "huấn luyện ở định dạng ONNX, nên tải về là chạy được ngay mà không phải huấn "
-          "luyện lại. Ba nhóm tệp **không** được đưa lên kho công khai, và lý do của từng "
-          "nhóm:"),
-    ("li", "**Khoá bí mật** (tệp cấu hình môi trường thật). Khoá này dùng để ký thẻ đăng "
-           "nhập; công bố nó đồng nghĩa với việc người ngoài tự tạo được thẻ quản trị hợp "
-           "lệ. Kho chỉ chứa tệp mẫu với giá trị để trống."),
-    ("li", "**Dữ liệu sinh trắc học và thông tin cá nhân**: ảnh khuôn mặt thật đã đăng ký, "
-           "ảnh chụp lúc điểm danh, và các tài liệu có họ tên kèm mã số sinh viên. Đây là "
-           "dữ liệu cá nhân của người thật nên không được công bố."),
-    ("li", "**Tệp nặng và tệp sinh lại được**: hai bộ dữ liệu huấn luyện gần 4 GB, thư "
-           "viện của giao diện web, và các tệp trọng số PyTorch khoảng 98 MB mỗi tệp."),
-
-    ("h2", "B. Cách chạy lại hệ thống"),
-    ("p", "**Chạy bằng Docker** — cách được khuyến nghị, không cần cài Python:"),
-    ("cmd", "cd deploy && docker compose up -d"),
-    ("p", "Sau khi các container báo trạng thái khoẻ mạnh, mở trình duyệt vào địa chỉ máy "
-          "chủ ở cổng được khai báo trong tệp cấu hình môi trường. Tài khoản quản trị "
-          "mặc định được tạo ở lần chạy đầu và phải đổi mật khẩu ngay sau khi đăng nhập."),
-    ("p", "**Chạy ứng dụng máy tính** (cần camera):"),
-    ("cmd", "pip install -r requirements.txt"),
-    ("cmd", "python desktop_app.py"),
-    ("p", "**Chạy bộ kiểm thử:**"),
-    ("cmd", "python -m backend.tests.test_flow"),
-    ("p", "Tương tự với sáu bộ còn lại liệt kê ở Bảng 3.19. Hai bộ kiểm thử kênh thời "
-          "gian thực và kiểm thử khói cần hệ thống đã được triển khai bằng Docker "
-          "trước đó."),
-
-    ("h2", "C. Bảng tra cứu các thư mục chính trong kho mã"),
-    ("tbl", [["Thư mục", "Nội dung"],
-             ["engine/", "Chuỗi xử lý ảnh: phát hiện, cổng chất lượng, căn chỉnh, chống "
-                         "giả mạo, trích đặc trưng, chỉ mục vector, bám vết"],
-             ["backend/", "Máy chủ API, cơ sở dữ liệu, nghiệp vụ điểm danh, bộ kiểm thử"],
-             ["web/", "Giao diện web quản trị"],
-             ["training/", "Các chương trình huấn luyện, chưng cất và đánh giá mô hình"],
-             ["deploy/", "Cấu hình Docker, nginx và tệp môi trường mẫu"],
-             ["report/", "Chương trình sinh báo cáo này từ mẫu của trường"],
-             ["models/", "Mô hình đã huấn luyện ở định dạng ONNX"],
-             ["desktop_app.py", "Ứng dụng máy tính: kiosk, đăng ký, nhận diện, cử chỉ tay"]]),
-    ("cap", "Bảng A.1. Các thư mục chính trong kho mã nguồn"),
+          "luyện lại. Ba nhóm tệp **không** được đưa lên kho công khai: khoá bí mật của "
+          "máy chủ, vì công bố nó đồng nghĩa với việc người ngoài tự tạo được thẻ quản "
+          "trị hợp lệ; dữ liệu sinh trắc học và thông tin cá nhân, gồm ảnh khuôn mặt "
+          "thật đã đăng ký và các tài liệu có họ tên kèm mã số sinh viên; và các tệp "
+          "nặng sinh lại được, gồm hai bộ dữ liệu huấn luyện gần 4 GB cùng các tệp "
+          "trọng số PyTorch khoảng 98 MB mỗi tệp."),
 ]

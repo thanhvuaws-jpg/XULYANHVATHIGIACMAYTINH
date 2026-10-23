@@ -164,7 +164,7 @@ NGUOI_DUNG_THAT = [
           "bằng số liệu, không chọn bằng cảm tính."),
     ("p", "**Thứ ba: lỗi ở chỗ nối không hiện ra trong kiểm thử từng tầng.** Vào thời điểm "
           "tám lỗi trên còn tồn tại, hệ thống có sáu bộ kiểm thử tự động với 73 phép "
-          "thử — bộ thứ bảy ở bảng 3.10 chính là kết quả của việc sửa lỗi 8 nên chưa có "
+          "thử — bộ thứ bảy ở Bảng 3.19 chính là kết quả của việc sửa lỗi 8 nên chưa có "
           "lúc đó — và cả 73 phép thử đều xanh suốt thời gian ấy. Chúng kiểm tra từng tầng riêng và kiểm tra rất kỹ, nhưng không bộ nào đặt "
           "câu hỏi \"điều gì xảy ra khi tầng A kết luận sau 0,2 giây còn tầng B cần 5 "
           "giây\". Sau khi phát hiện, nhóm bổ sung một bộ kiểm thử riêng cho chỗ nối đó, "
