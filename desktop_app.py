@@ -275,14 +275,44 @@ def sanitize(name: str) -> str:
 _NOT_EMBEDDERS = ("face_detection", "yunet", "hand_landmarker", "antispoof", "minifas")
 
 
+#: Tỉ lệ đúng hạng nhất đo trên cùng tập kiểm tra (122 người đã đăng ký, 61 người
+#: lạ, không ai xuất hiện lúc huấn luyện). Nguồn: Bảng 3.5 của báo cáo.
+RANK1 = {
+    "mobilefacenet_distill_casia": 0.9778,
+    "mobilefacenet_distill": 0.9082,
+    "mobilefacenet_lfw": 0.8671,
+    "mobilefacenet_casia": 0.7563,
+}
+
+
 def available_models() -> list[tuple[str, str, str]]:
-    """Các mô hình trích đặc trưng dùng được: (nhãn hiển thị, backend, weights)."""
-    out = [("FaceNet — pretrained, chính xác nhất (107 MB)", "facenet", "")]
+    """Các mô hình trích đặc trưng dùng được: (nhãn hiển thị, backend, weights).
+
+    Nhãn phải nói ra ba thứ: **huấn luyện bằng cách nào**, **chính xác tới đâu**,
+    và cỡ tệp. Bản cũ ghi mọi mô hình là "tự train (4.8 MB, nhanh)" y hệt nhau,
+    nên nhìn vào không phân biệt nổi — trong khi chúng cách nhau từ 0,756 tới
+    0,978, hơn 22 điểm. Hai cái tên còn gần như trùng nhau: `mobilefacenet_casia`
+    (kém nhất) và `mobilefacenet_distill_casia` (tốt nhất) chỉ khác chữ ở giữa.
+    Chọn nhầm thì hệ thống nhận diện tệt hẳn mà không báo gì.
+
+    Danh sách sắp theo **độ chính xác giảm dần**, không theo thứ tự chữ cái, để
+    mô hình nên dùng luôn nằm trên cùng.
+    """
+    out = [("FaceNet — mô hình thầy, chính xác nhất · rank-1 0,984 (107 MB)",
+            "facenet", "")]
+    cac_ban = []
     for onnx in sorted(config.MODELS_DIR.glob("*.onnx")):
         if any(k in onnx.stem.lower() for k in _NOT_EMBEDDERS):
             continue
+        ten = onnx.stem
         mb = onnx.stat().st_size / 1e6
-        out.append((f"{onnx.stem} — tự train ({mb:.1f} MB, nhanh)", "onnx", str(onnx)))
+        cach = "chưng cất" if "distill" in ten.lower() else "train từ đầu"
+        r1 = RANK1.get(ten)
+        diem = f" · rank-1 {r1:.3f}".replace(".", ",") if r1 is not None else ""
+        cac_ban.append((r1 if r1 is not None else -1.0,
+                        f"{ten} — {cach}{diem} ({mb:.1f} MB)", "onnx", str(onnx)))
+    cac_ban.sort(key=lambda x: -x[0])
+    out += [(nhan, be, w) for _, nhan, be, w in cac_ban]
     return out
 
 
