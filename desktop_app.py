@@ -557,6 +557,55 @@ class Engine:
         self.reload_db()
         return len(vectors), len(rejected), [r.get("reason", "?") for r in rejected]
 
+    def dung_lai_db(self, bao_tien_do=None) -> tuple[int, int, list[str]]:
+        """Dựng lại toàn bộ database từ ảnh gốc, **không đụng đĩa cho tới khi xong**.
+
+        Vì sao không xoá trước rồi nạp sau
+        ----------------------------------
+        Bản trước xoá sạch `embeddings.pkl` rồi mới lặp qua từng thư mục. Chỉ cần
+        một thư mục ném lỗi giữa chừng là vòng lặp dừng, và người dùng mất **toàn
+        bộ** dữ liệu đăng ký — ảnh gốc vẫn còn nhưng database trống trơn, nhìn
+        như phải đăng ký lại từ đầu. Đúng tình huống đã xảy ra thật.
+
+        Ở đây mọi vector được dựng vào một dict trong bộ nhớ. Chỉ khi dựng xong
+        và có ít nhất một người mới ghi đè lên tệp cũ. Hỏng giữa chừng thì tệp cũ
+        còn nguyên.
+
+        Trả về (số người, số vector, danh sách lỗi theo từng thư mục).
+        """
+        moi_db: dict = {}
+        loi: list[str] = []
+        tong = 0
+        for ten in self.folders():
+            if bao_tien_do:
+                bao_tien_do(ten, None)
+            try:
+                anh = [doc_anh(f) for f in self.folder_images(ten)]
+                anh = [a for a in anh if a is not None]
+                if not anh:
+                    loi.append(f"{ten}: không đọc được ảnh nào")
+                    continue
+                vectors, reports = self.pipeline.embed_for_enrollment(anh, strict=True)
+                bi_loai = sum(1 for r in reports if not r["ok"])
+                if len(vectors) == 0:
+                    loi.append(f"{ten}: cả {len(anh)} ảnh đều trượt cổng chất lượng")
+                    continue
+                moi_db[ten] = np.asarray(vectors, dtype=np.float32)
+                tong += len(vectors)
+                if bao_tien_do:
+                    bao_tien_do(ten, (len(vectors), bi_loai))
+            except Exception as e:                        # noqa: BLE001
+                loi.append(f"{ten}: {type(e).__name__} — {e}")
+
+        if not moi_db:
+            # Không ghi gì cả. Database cũ giữ nguyên.
+            return 0, 0, loi or ["không dựng được người nào"]
+
+        save_db(moi_db, self.db_path)
+        self.db = moi_db
+        self.reload_db()
+        return len(moi_db), tong, loi
+
     def remove_from_db(self, name: str):
         db = load_db(self.db_path)
         db.pop(name, None)
@@ -2119,29 +2168,18 @@ class DashboardPage(QWidget):
         self.refresh()
 
     def _rebuild_db(self):
-        """Dựng LẠI TỪ ĐẦU database bằng mô hình đang chọn.
+        """Dựng lại database từ ảnh gốc bằng mô hình đang chọn.
 
-        Nguồn sự thật là ảnh gốc trong `data/enrolled/<tên>/`: xoá sạch database
-        rồi trích đặc trưng lại từ những ảnh đó.
-
-        Vì sao phải xoá sạch trước
-        --------------------------
-        Bản cũ chỉ lặp qua từng thư mục rồi gán `db[tên] = vector mới`, nên tên
-        nào **không có thư mục** thì giữ nguyên vector cũ. Sau khi đổi mô hình,
-        database thành hỗn hợp hai không gian vector không so sánh được với nhau
-        — và không có lỗi nào báo ra, vì mô hình nào cũng cho vector 512 chiều.
-        Đo thực tế lúc phát hiện: 46 người trong database, nút này chỉ trích lại
-        được 4, còn 42 người giữ vector của mô hình cũ.
-
-        Dựng lại từ đầu thì không thể còn sót vector lạc mô hình. Đổi lại, ai
-        không còn ảnh gốc sẽ bị loại — nên hỏi trước khi làm.
+        Nguồn sự thật là `data/enrolled/<tên>/`. Việc dựng diễn ra trong bộ nhớ
+        (xem `Engine.dung_lai_db`), nên hỏng giữa chừng thì database cũ còn
+        nguyên — người dùng không mất dữ liệu đăng ký.
         """
         folders = self.engine.folders()
         if not folders:
-            QMessageBox.information(self, "Chưa có ai", "Chưa có folder nào trong data/enrolled/.")
+            QMessageBox.information(self, "Chưa có ai",
+                                    "Chưa có folder nào trong data/enrolled/.")
             return
 
-        # Cảnh báo đúng những tên sắp mất, thay vì cảnh báo chung chung.
         mat = sorted(set(self.engine.db) - set(folders))
         if mat:
             vd = ", ".join(mat[:5]) + (f"… và {len(mat) - 5} người nữa" if len(mat) > 5 else "")
@@ -2157,22 +2195,45 @@ class DashboardPage(QWidget):
             if tra_loi != QMessageBox.StandardButton.Yes:
                 return
 
-        # Xoá sạch TRƯỚC khi nạp lại.
-        save_db({}, self.engine.db_path)
-        self.engine.reload_db()
         self.log.clear()
         self.log.appendPlainText(f"Dựng lại database bằng {self.cb_backbone.currentText()}\n")
+
+        def tien_do(ten, kq):
+            if kq is None:
+                self.log.appendPlainText(f"  {ten:<20} đang xử lý…")
+            else:
+                n, bi_loai = kq
+                self.log.appendPlainText(f"  {ten:<20} {n} vector"
+                                         + (f"  (loại {bi_loai} ảnh)" if bi_loai else ""))
+            QApplication.processEvents()
+
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        total = 0
         try:
-            for name in folders:
-                n, rejected, _ = self.engine.commit_folder(name)
-                total += n
-                self.log.appendPlainText(f"  {name:<20} {n} vector"
-                                         + (f"  (loại {rejected} ảnh)" if rejected else ""))
+            so_nguoi, so_vector, loi = self.engine.dung_lai_db(tien_do)
         finally:
             QApplication.restoreOverrideCursor()
-        self.log.appendPlainText(f"\n[OK] {len(folders)} người · {total} vector")
+
+        for d in loi:
+            self.log.appendPlainText(f"  [LỖI] {d}")
+
+        if so_nguoi == 0:
+            # Không ghi đè gì cả — nói rõ để người dùng biết dữ liệu cũ còn nguyên.
+            self.log.appendPlainText("\n[HỎNG] Không dựng được người nào. "
+                                     "Database cũ giữ nguyên.")
+            QMessageBox.critical(
+                self, "Không dựng lại được",
+                "Không trích được đặc trưng cho người nào.\n\n"
+                + "\n".join(loi[:5])
+                + "\n\nDatabase cũ KHÔNG bị xoá. Kiểm tra lại mô hình đang chọn "
+                  "rồi thử lại.")
+            return
+
+        self.log.appendPlainText(f"\n[OK] {so_nguoi} người · {so_vector} vector")
+        if loi:
+            QMessageBox.warning(
+                self, "Dựng xong nhưng có lỗi",
+                f"Đã dựng {so_nguoi} người.\n\nMột số thư mục không nạp được:\n"
+                + "\n".join(loi[:5]))
         self.refresh()
         if self.on_change:
             self.on_change()
