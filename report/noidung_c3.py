@@ -93,7 +93,7 @@ CHUONG_3 = [
           "trị theo phương sai ảnh xám để phép đo bất biến với độ tương phản. Độ nhạy "
           "tăng từ 28 % lên 83 %."),
     ("p", "**Lỗi thứ hai: gộp hai loại góc nghiêng làm một.** Ban đầu tầng này chặn theo "
-          "một giá trị \"độ nghiêng\" duy nhất. Nhưng như đã phân tích ở mục 2.2.1, bước "
+          "một giá trị \"độ nghiêng\" duy nhất. Nhưng như đã phân tích ở mục 2.4.1, bước "
           "căn chỉnh đã xoay thẳng khuôn mặt trong mặt phẳng ảnh, nên **góc nghiêng đầu "
           "gần như vô hại**, trong khi **góc quay ngang** mới thực sự làm mất thông tin. "
           "Gộp chung khiến hệ thống loại oan ảnh tốt và cho lọt ảnh xấu. Sau khi tách "
@@ -140,10 +140,34 @@ CHUONG_3 = [
           "giải thích vì sao phải tăng biên độ dần: đặt giá trị cuối ngay từ epoch đầu "
           "khiến bài toán khó gấp bốn lần rưỡi ngay khi trọng số còn ngẫu nhiên."),
 
+    ("p", "**Đường học của bốn mô hình.** Bảng cấu hình cho biết mỗi mô hình chạy bao "
+          "nhiêu vòng và dừng ở kết quả nào, nhưng không cho thấy nó đi tới đó bằng "
+          "đường nào. Hình dưới vẽ hàm mất mát khi huấn luyện cùng tỉ lệ xác thực đúng "
+          "trên tập kiểm định theo từng vòng lặp."),
+    ("img", "reports/bc_duong_hoc.png"),
+    ("cap", "Hình 3.1. Đường học của bốn mô hình do nhóm huấn luyện"),
+    ("p", "Ba điều đọc được từ hình này."),
+    ("li", "**Hàm mất mát của hai mô hình ArcFace tăng trước khi giảm.** Đó không phải "
+           "dấu hiệu hỏng mà là hệ quả của việc tăng dần biên độ góc: những vòng đầu "
+           "biên độ còn nhỏ nên bài toán dễ, biên độ tăng lên thì bài toán khó hơn và "
+           "hàm mất mát vọt lên, sau đó mới giảm khi mô hình thích nghi. Đúng với số đo "
+           "ở trên: cùng một mô hình, hàm mất mát khởi điểm là 7,80 khi biên độ bằng 0 "
+           "và 35,45 khi biên độ bằng 0,5."),
+    ("li", "**Hai mô hình chưng cất giảm trơn ngay từ vòng đầu**, không có giai đoạn vọt "
+           "lên, vì đích học là vector của mô hình thầy chứ không phải một bài toán phân "
+           "loại có biên độ."),
+    ("li", "**Mô hình ArcFace trên CASIA bị cắt ngang lúc còn đang đi lên.** Đường kiểm "
+           "định của ba mô hình kia đã đi ngang ở những vòng cuối — dấu hiệu đã hội tụ. "
+           "Riêng đường của nó vẫn còn dốc lên tại vòng thứ 18, nghĩa là chạy thêm nữa "
+           "thì còn cải thiện được. Đây là bằng chứng trực quan cho kết luận ở mục "
+           "3.1.7: con số 0,7563 thấp không phải vì dữ liệu lớn làm hại mô hình, mà vì "
+           "6.000 danh tính cần nhiều vòng hơn hẳn số vòng chạy được trong giới hạn thời "
+           "gian — mỗi vòng trên CASIA tốn khoảng 7 phút, so với 10 giây trên LFW."),
+
     ("h3", "3.1.6. Sửa lỗi rò rỉ danh tính trong đánh giá"),
     ("p", "Cách đánh giá ban đầu chia **ảnh** của cùng một người thành tập đăng ký và tập "
           "truy vấn, khiến mọi danh tính trong tập kiểm tra đều đã xuất hiện lúc huấn "
-          "luyện. Như đã phân tích ở mục 2.3.2, đó là rò rỉ dữ liệu. Sau khi chuyển sang "
+          "luyện. Như đã phân tích ở mục 2.5.2, đó là rò rỉ dữ liệu. Sau khi chuyển sang "
           "chia theo danh tính, cùng một mô hình FaceNet cho kết quả khác hẳn:"),
     ("tbl", [["Chỉ số", "Cách đánh giá cũ (có rò rỉ)", "Cách đúng (open-set)"],
              ["Diện tích dưới đường ROC", "0,9998", "0,9976"],
@@ -158,7 +182,7 @@ CHUONG_3 = [
 
     ("h3", "3.1.7. Chưng cất tri thức và kết quả so sánh năm mô hình"),
     ("p", "Mô hình huấn luyện từ đầu chỉ đạt mức khiêm tốn do lượng dữ liệu và thời gian "
-          "hạn chế. Nhóm áp dụng chưng cất tri thức như trình bày ở mục 2.3.1, dùng "
+          "hạn chế. Nhóm áp dụng chưng cất tri thức như trình bày ở mục 2.5.1, dùng "
           "FaceNet làm mô hình thầy. Năm mô hình được đánh giá trên **cùng một tập kiểm "
           "tra gồm 122 người đã đăng ký và 61 người lạ**, không ai xuất hiện lúc huấn luyện."),
     ("tbl", [["Mô hình", "Dữ liệu huấn luyện", "rank-1", "EER", "DIR@1%", "ms", "MB"],
@@ -169,11 +193,11 @@ CHUONG_3 = [
              ["FaceNet (thầy)", "VGGFace2 · 3,3 triệu ảnh", "0,9842", "1,50 %", "0,8513", "83,70", "107,0"]]),
     ("cap", "Bảng 3.5. So sánh năm mô hình trích đặc trưng trên cùng tập kiểm tra"),
     ("img", "reports/bc_so_sanh_mo_hinh.png"),
-    ("cap", "Hình 3.1. So sánh năm mô hình theo bốn tiêu chí: định danh, xác thực, "
+    ("cap", "Hình 3.2. So sánh năm mô hình theo bốn tiêu chí: định danh, xác thực, "
             "open-set và chi phí tính toán"),
     ("p", "Ba kết luận rút ra từ bảng trên:"),
     ("li", "**Chưng cất vượt xa huấn luyện từ đầu** ở cùng lượng dữ liệu. Lý do như đã "
-           "phân tích ở mục 2.3.1: đích hồi quy 512 chiều mang nhiều thông tin hơn nhãn "
+           "phân tích ở mục 2.5.1: đích hồi quy 512 chiều mang nhiều thông tin hơn nhãn "
            "một-trong-N, và phương pháp này dùng được cả ảnh không nhãn."),
     ("li", "**Dữ liệu quan trọng hơn thuật toán** trong bài toán này. Vẫn phương pháp "
            "chưng cất, chỉ tăng dữ liệu từ 9 nghìn lên 112 nghìn ảnh đã kéo tỉ lệ đúng "
@@ -204,7 +228,7 @@ CHUONG_3 = [
     ("p", "Trường hợp mô hình ArcFace huấn luyện từ đầu trên CASIA đáng được nhắc riêng: "
           "nó có tỉ lệ lỗi cân bằng ngang với mô hình huấn luyện trên LFW (9,57 % so với "
           "9,63 %) nhưng chỉ số open-set lại thấp hơn hẳn (0,2199 so với 0,6756). Điều "
-          "này minh hoạ đúng nhận xét ở mục 2.3.3: **phân biệt được hai ảnh là một "
+          "này minh hoạ đúng nhận xét ở mục 2.5.3: **phân biệt được hai ảnh là một "
           "chuyện, còn cho ra một điểm số đáng tin cậy ở mức tuyệt đối lại là chuyện "
           "khác**. Ngưỡng vận hành đề xuất của mô hình này là 0,977 — sát trần, dấu hiệu "
           "cho thấy mọi vector của nó nằm chen chúc trong một vùng hẹp."),
@@ -262,7 +286,7 @@ CHUONG_3 = [
           "chỉnh hai lần nằm ngoài phân bố dữ liệu chúng từng thấy."),
     ("p", "Đáng chú ý là tỉ lệ đúng hạng nhất và tỉ lệ lỗi cân bằng gần như không đổi "
           "giữa hai cách chấm; chỉ riêng chỉ số open-set biến động mạnh. Điều này củng cố "
-          "thêm nhận định ở mục 2.3.3 rằng open-set là giao thức nhạy cảm nhất và cũng là "
+          "thêm nhận định ở mục 2.5.3 rằng open-set là giao thức nhạy cảm nhất và cũng là "
           "giao thức duy nhất phản ánh đúng bài toán điểm danh."),
     ("p", "**Nguyên tắc rút ra:** tập kiểm tra phải đi qua đúng chuỗi xử lý mà hệ thống "
           "thật đi qua — không nhiều hơn cũng không ít hơn một bước nào. Việc dùng lại "
@@ -419,7 +443,7 @@ CHUONG_3 = [
           "Chứng minh từng thành phần đáng tồn tại thì phải tắt nó đi rồi đo lại trên "
           "cùng tập kiểm tra và cùng mô hình. Chênh lệch chính là đóng góp thật."),
     ("img", "reports/bc_ablation.png"),
-    ("cap", "Hình 3.2. Kết quả thí nghiệm cắt bỏ ba thành phần chính"),
+    ("cap", "Hình 3.3. Kết quả thí nghiệm cắt bỏ ba thành phần chính"),
     ("p", "**Căn chỉnh khuôn mặt là thành phần đóng góp lớn nhất toàn hệ thống.** Thay "
           "phép căn chỉnh theo năm điểm mốc bằng cách chỉ cắt hộp bao rồi thu nhỏ, tỉ lệ "
           "đúng hạng nhất tụt từ 0,9778 xuống **0,8829**, và chỉ số open-set tụt từ "

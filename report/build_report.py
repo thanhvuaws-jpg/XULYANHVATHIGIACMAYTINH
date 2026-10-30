@@ -493,7 +493,9 @@ def main() -> int:
     for i, (ten, mota, ten_anh) in enumerate(GIAO_DIEN, 1):
         b.tieumuc(ten)
         b.than(mota)
-        chu = f"Hình 3.{i + 2}. {ten.split('. ', 1)[1]}"
+        # +3 vì chương 3 đã có ba hình trước mục giao diện: đường học, so sánh
+        # mô hình, và thí nghiệm cắt bỏ.
+        chu = f"Hình 3.{i + 3}. {ten.split('. ', 1)[1]}"
         anh = ANH_APP / f"{ten_anh}.png"
         if anh.exists():
             # Dùng b.anh chứ không gọi thẳng insert_image: b.anh còn dời con trỏ

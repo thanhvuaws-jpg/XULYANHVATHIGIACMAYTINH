@@ -126,18 +126,21 @@ CHUONG_1 = [
     ("p", "**Phương pháp đánh giá đúng chuẩn.** Tập dữ liệu được chia theo **danh tính** "
           "chứ không theo ảnh, bảo đảm người xuất hiện trong tập kiểm tra chưa từng xuất "
           "hiện lúc huấn luyện. Kết quả báo cáo theo ba giao thức chuẩn thay vì một con "
-          "số độ chính xác duy nhất. Lý do của lựa chọn này được phân tích ở mục 2.3."),
+          "số độ chính xác duy nhất. Lý do của lựa chọn này được phân tích ở mục 2.5."),
     ("p", "**Phương pháp phát triển phần mềm.** Xây dựng theo từng bước, mỗi bước có bộ "
           "kiểm thử tự động chạy được lại bất cứ lúc nào. Hệ thống hoàn chỉnh có tám bộ "
           "kiểm thử với tổng cộng 106 phép thử, trong đó hai bộ gọi qua giao thức HTTP "
           "vào hệ thống đã triển khai thật chứ không gọi vào mã nguồn."),
+    ("h2", "1.6. Bố cục đề tài"),
     ("p", "Phần còn lại của báo cáo được tổ chức như sau."),
-    ("p", "**Chương 2** trình bày cơ sở lý thuyết của ba nhóm kỹ thuật được sử dụng. "
-          "Mục 2.1 phân tích bài toán phát hiện khuôn mặt và so sánh hai hướng tiếp cận "
-          "là mạng nối tiếp nhiều giai đoạn MTCNN và mạng một giai đoạn YuNet. Mục 2.2 "
+    ("p", "**Chương 2** trình bày cơ sở lý thuyết. Mục 2.1 nhắc lại những khái niệm nền "
+          "của xử lý ảnh và thị giác máy tính; mục 2.4 trình bày cấu trúc chung của "
+          "một mạng nơ-ron tích chập. Ba mục còn lại đi vào đúng những kỹ thuật đề "
+          "tài sử dụng. Mục 2.3 phân tích bài toán phát hiện khuôn mặt và so sánh hai hướng tiếp cận "
+          "là mạng nối tiếp nhiều giai đoạn MTCNN và mạng một giai đoạn YuNet. Mục 2.4 "
           "trình bày cách một mạng tích chập biến khuôn mặt thành vector đặc trưng, vì "
           "sao hàm mất mát ArcFace cho vector phân tách tốt hơn hàm mất mát phân loại "
-          "thông thường, và vai trò của bước căn chỉnh khuôn mặt. Mục 2.3 trình bày kỹ "
+          "thông thường, và vai trò của bước căn chỉnh khuôn mặt. Mục 2.5 trình bày kỹ "
           "thuật chưng cất tri thức dùng để thu nhỏ mô hình, cùng giao thức đánh giá "
           "open-set và lý do vì sao cách đánh giá thông thường cho kết quả sai lệch."),
     ("p", "**Chương 3** trình bày quá trình phân tích, xây dựng và kiểm chứng sản phẩm. "
@@ -151,23 +154,72 @@ CHUONG_1 = [
 
 CHUONG_2 = [
     ("p", "Hệ thống nhận diện khuôn mặt không phải một mô hình duy nhất mà là một chuỗi "
-          "xử lý gồm nhiều tầng, mỗi tầng giải một bài toán con khác nhau. Chương này "
-          "trình bày cơ sở lý thuyết của ba nhóm kỹ thuật quyết định chất lượng hệ thống: "
-          "phát hiện khuôn mặt (mục 2.1), trích đặc trưng và hàm mất mát ArcFace "
-          "(mục 2.2), chưng cất tri thức cùng giao thức đánh giá open-set (mục 2.3)."),
+          "xử lý gồm nhiều tầng, mỗi tầng giải một bài toán con khác nhau. Hai mục đầu "
+          "chương nhắc lại nền tảng chung — khái niệm ảnh số cùng các phép tiền xử lý "
+          "(mục 2.1), và cấu trúc của một mạng nơ-ron tích chập (mục 2.2). Ba mục còn "
+          "lại trình bày ba nhóm kỹ thuật quyết định chất lượng hệ thống: "
+          "phát hiện khuôn mặt (mục 2.3), trích đặc trưng và hàm mất mát ArcFace "
+          "(mục 2.4), chưng cất tri thức cùng giao thức đánh giá open-set (mục 2.5)."),
     ("p", "Ba nhóm này được chọn vì chúng tương ứng với ba câu hỏi mà đề tài buộc phải "
           "trả lời: **tìm khuôn mặt ở đâu trong ảnh** và tìm đủ nhanh để chạy thời gian "
           "thực; **mô tả khuôn mặt bằng con số như thế nào** để hai ảnh của cùng một "
           "người cho hai vector gần nhau; và **làm sao biết hệ thống thực sự tốt tới "
           "đâu** khi nó phải hoạt động với cả những người nó chưa từng nhìn thấy."),
 
-    ("h2", "2.1. Phát hiện khuôn mặt: MTCNN và YuNet"),
+    ("h2", "2.1. Tổng quan về xử lý ảnh và thị giác máy tính"),
+    ("p", "**Ảnh số** là một ma trận các điểm ảnh. Ảnh màu thông dụng lưu ba kênh đỏ, "
+          "lục, lam, mỗi kênh một giá trị từ 0 tới 255 cho mỗi điểm; ảnh xám chỉ còn một "
+          "kênh độ sáng. Một khung hình 1280×720 ảnh màu vì vậy là khoảng 2,7 triệu con "
+          "số — đó là toàn bộ thứ mà máy nhìn thấy, không có khái niệm \"khuôn mặt\" nào "
+          "sẵn trong đó."),
+    ("p", "**Xử lý ảnh** là các phép biến đổi trên ma trận ấy: đổi kích thước, chuẩn hoá "
+          "giá trị, khử nhiễu, cân bằng sáng. **Thị giác máy tính** đi xa hơn một bậc — "
+          "nó rút ra thông tin có nghĩa từ ảnh, chẳng hạn trả lời câu hỏi trong ảnh có "
+          "bao nhiêu khuôn mặt và mỗi khuôn mặt là ai. Đề tài này nằm trọn ở bậc thứ "
+          "hai, còn các phép xử lý ảnh đóng vai trò chuẩn bị đầu vào."),
+    ("p", "Ba phép tiền xử lý được dùng xuyên suốt đề tài:"),
+    ("li", "**Đổi kích thước** mọi ảnh khuôn mặt về 112×112 điểm. Mạng tích chập cần đầu "
+           "vào cùng kích thước, và kích thước này là chuẩn của họ mô hình ArcFace."),
+    ("li", "**Chuẩn hoá giá trị** điểm ảnh từ khoảng 0–255 về khoảng quanh 0. Không chuẩn "
+           "hoá thì các giá trị lớn làm quá trình huấn luyện mất ổn định."),
+    ("li", "**Căn chỉnh hình học** — xoay và co ảnh sao cho hai mắt luôn nằm đúng một vị "
+           "trí. Đây là phép đặc thù của bài toán khuôn mặt, trình bày riêng ở mục 2.4.1, "
+           "và theo thí nghiệm cắt bỏ ở mục 3.1.10 thì nó đóng góp lớn nhất toàn hệ thống."),
+
+    ("h2", "2.2. Mạng nơ-ron tích chập"),
+    ("p", "Mạng nơ-ron tích chập là kiến trúc nền của mọi mô hình trong đề tài này, cả "
+          "mô hình phát hiện lẫn mô hình trích đặc trưng. Ý tưởng cốt lõi: thay vì nối "
+          "mọi điểm ảnh với mọi nơ-ron — cách làm khiến số tham số bùng nổ và mất hoàn "
+          "toàn thông tin về vị trí — mạng dùng những bộ lọc nhỏ **trượt khắp ảnh**, và "
+          "cùng một bộ lọc dùng chung cho mọi vị trí."),
+    ("p", "Một mạng tích chập điển hình gồm bốn loại lớp:"),
+    ("li", "**Lớp tích chập** trượt các bộ lọc kích thước nhỏ, thường 3×3, trên ảnh để "
+           "sinh ra bản đồ đặc trưng. Những lớp đầu bắt các chi tiết đơn giản như cạnh "
+           "và góc; càng vào sâu, các lớp càng ghép chúng thành bộ phận phức tạp hơn — "
+           "với khuôn mặt thì là mắt, mũi, đường viền hàm."),
+    ("li", "**Lớp gộp** thu nhỏ bản đồ đặc trưng bằng cách lấy giá trị lớn nhất hoặc "
+           "trung bình trong từng ô nhỏ. Việc này giảm khối lượng tính toán và khiến mạng "
+           "ít nhạy cảm hơn với những xê dịch nhỏ của đối tượng."),
+    ("li", "**Lớp kết nối đầy đủ** đặt ở cuối, gộp toàn bộ đặc trưng đã trích thành vector "
+           "kết quả. Ở bài toán phân loại, vector này đi qua hàm softmax để thành xác "
+           "suất của từng lớp; ở bài toán nhận diện khuôn mặt, chính vector đó mới là "
+           "thứ cần — xem mục 2.4.2."),
+    ("li", "**Hàm kích hoạt** đặt xen giữa các lớp, thông dụng nhất là ReLU, giữ nguyên "
+           "giá trị dương và đưa giá trị âm về 0. Không có hàm kích hoạt thì nhiều lớp "
+           "tích chập nối tiếp cũng chỉ tương đương một phép biến đổi tuyến tính duy "
+           "nhất, và mạng mất khả năng mô tả quan hệ phức tạp."),
+    ("p", "Quá trình huấn luyện đo sai lệch giữa kết quả mạng đưa ra và kết quả đúng bằng "
+          "một **hàm mất mát**, rồi lan ngược sai lệch đó về từng tham số để chỉnh dần. "
+          "Với bài toán phân loại thông thường, hàm mất mát quen dùng là entropy chéo. "
+          "Nhận diện khuôn mặt cần một hàm khác, vì lý do trình bày ở mục 2.4.3."),
+
+    ("h2", "2.3. Phát hiện khuôn mặt: MTCNN và YuNet"),
     ("p", "Phát hiện khuôn mặt là tầng đầu tiên và là tầng quyết định giới hạn tốc độ "
           "của cả hệ thống, vì nó phải chạy trên **toàn bộ** khung hình ở mọi khung, "
           "trong khi các tầng sau chỉ chạy trên phần ảnh đã cắt ra. Đầu ra của tầng này "
           "gồm hộp bao quanh mỗi khuôn mặt và năm điểm mốc: hai mắt, mũi và hai khoé "
-          "miệng — năm điểm này là đầu vào bắt buộc cho bước căn chỉnh ở mục 2.2."),
-    ("h3", "2.1.1. MTCNN — mạng nối tiếp ba giai đoạn"),
+          "miệng — năm điểm này là đầu vào bắt buộc cho bước căn chỉnh ở mục 2.4."),
+    ("h3", "2.3.1. MTCNN — mạng nối tiếp ba giai đoạn"),
     ("p", "MTCNN (Multi-task Cascaded Convolutional Networks) giải bài toán bằng ba mạng "
           "tích chập nhỏ nối tiếp nhau, mỗi mạng lọc bớt ứng viên cho mạng sau:"),
     ("li", "**P-Net** quét toàn ảnh ở nhiều tỉ lệ trong một kim tự tháp ảnh, sinh ra rất "
@@ -179,7 +231,7 @@ CHUONG_2 = [
           "số khuôn mặt trong ảnh**: ảnh càng đông người thì càng nhiều ứng viên phải đi "
           "qua R-Net và O-Net. Đây chính là điểm khiến MTCNN không phù hợp với kịch bản "
           "lớp học, như số liệu đo ở mục 3.1.3 cho thấy."),
-    ("h3", "2.1.2. YuNet — mạng một giai đoạn"),
+    ("h3", "2.3.2. YuNet — mạng một giai đoạn"),
     ("p", "YuNet đi theo hướng ngược lại: một mạng tích chập duy nhất, chạy một lần trên "
           "ảnh đã thu nhỏ về kích thước cố định, dự đoán đồng thời hộp bao, điểm tin cậy "
           "và năm điểm mốc. Mạng chỉ có khoảng 75 nghìn tham số và tệp mô hình nặng "
@@ -193,8 +245,8 @@ CHUONG_2 = [
           "**cùng thứ tự** với mẫu chuẩn của ArcFace, nên dùng được ngay cho bước căn "
           "chỉnh mà không phải sắp xếp lại."),
 
-    ("h2", "2.2. Trích đặc trưng khuôn mặt và hàm mất mát ArcFace"),
-    ("h3", "2.2.1. Căn chỉnh khuôn mặt bằng phép biến đổi tương tự"),
+    ("h2", "2.4. Trích đặc trưng khuôn mặt và hàm mất mát ArcFace"),
+    ("h3", "2.4.1. Căn chỉnh khuôn mặt bằng phép biến đổi tương tự"),
     ("p", "Trước khi đưa vào mạng trích đặc trưng, khuôn mặt phải được đưa về một tư thế "
           "chuẩn. Nếu bỏ qua bước này, cùng một người chụp nghiêng đầu hai kiểu khác "
           "nhau sẽ cho hai vector cách xa nhau, và mạng buộc phải học thêm tính bất biến "
@@ -214,7 +266,7 @@ CHUONG_2 = [
           "khuôn mặt, **góc nghiêng đầu trong mặt phẳng ảnh gần như không gây hại**, "
           "trong khi **góc quay ngang** lại làm mất hẳn thông tin của một bên mặt và "
           "không phép biến đổi hai chiều nào cứu được."),
-    ("h3", "2.2.2. Vector đặc trưng và độ đo cosine"),
+    ("h3", "2.4.2. Vector đặc trưng và độ đo cosine"),
     ("p", "Mạng trích đặc trưng biến ảnh khuôn mặt 112×112 thành một vector 512 chiều. "
           "Vector này được **chuẩn hoá về độ dài bằng 1**, nhờ đó tích vô hướng của hai "
           "vector chính bằng cosin của góc giữa chúng, nhận giá trị trong đoạn từ −1 tới "
@@ -223,7 +275,7 @@ CHUONG_2 = [
     ("p", "Việc chuẩn hoá không chỉ để tiện tính toán. Nó ép toàn bộ không gian đặc trưng "
           "nằm trên mặt cầu đơn vị, biến bài toán so khớp thành bài toán đo góc — và "
           "chính trên mặt cầu này hàm mất mát ArcFace mới phát huy tác dụng."),
-    ("h3", "2.2.3. Hàm mất mát ArcFace"),
+    ("h3", "2.4.3. Hàm mất mát ArcFace"),
     ("p", "Nếu huấn luyện mạng bằng hàm mất mát phân loại thông thường, mạng chỉ cần học "
           "sao cho mỗi người rơi đúng vào lớp của mình. Điều đó **không** bảo đảm rằng "
           "hai người khác nhau nằm cách xa nhau: các lớp chỉ cần tách được là đủ, dù "
@@ -239,7 +291,7 @@ CHUONG_2 = [
     ("p", "Biên độ càng lớn thì bài toán càng bị siết chặt. Số đo cụ thể của hiệu ứng "
           "này, cùng lý do vì sao phải tăng biên độ **dần dần** thay vì đặt giá trị cuối "
           "ngay từ đầu, được trình bày ở mục 3.1.5."),
-    ("h3", "2.2.4. MobileFaceNet — kiến trúc mạng được chọn"),
+    ("h3", "2.4.4. MobileFaceNet — kiến trúc mạng được chọn"),
     ("p", "Đề tài chọn MobileFaceNet làm kiến trúc trích đặc trưng thay vì các mạng sâu "
           "như ResNet50. Ba lý do:"),
     ("li", "**Số tham số nhỏ**: khoảng 1,2 triệu, so với 25 triệu của ResNet50. Với chỉ "
@@ -254,8 +306,8 @@ CHUONG_2 = [
            "rìa. Tích chập toàn cục theo chiều sâu cho phép mạng tự học trọng số riêng "
            "cho từng vị trí."),
 
-    ("h2", "2.3. Chưng cất tri thức và giao thức đánh giá open-set"),
-    ("h3", "2.3.1. Chưng cất tri thức"),
+    ("h2", "2.5. Chưng cất tri thức và giao thức đánh giá open-set"),
+    ("h3", "2.5.1. Chưng cất tri thức"),
     ("p", "Huấn luyện một mạng từ đầu trên lượng dữ liệu vừa phải cho kết quả hạn chế, "
           "trong khi các mô hình công khai đã được huấn luyện trên hàng triệu ảnh. Chưng "
           "cất tri thức là cách chuyển năng lực của một mô hình lớn (gọi là **thầy**) "
@@ -269,7 +321,7 @@ CHUONG_2 = [
           "được cho trò nhiều hơn. Thứ hai, và quan trọng hơn về mặt thực hành: **trò "
           "không cần nhãn danh tính**. Chỉ cần đưa ảnh qua thầy để lấy vector đích, nên "
           "mọi ảnh khuôn mặt đều dùng được, kể cả ảnh không có nhãn."),
-    ("h3", "2.3.2. Vì sao phải chia dữ liệu theo danh tính"),
+    ("h3", "2.5.2. Vì sao phải chia dữ liệu theo danh tính"),
     ("p", "Một sai lầm phổ biến khi đánh giá hệ thống nhận diện khuôn mặt là chia tập "
           "kiểm tra theo **ảnh**: lấy một số ảnh của mỗi người làm tập đăng ký, số còn "
           "lại làm tập truy vấn. Cách chia này khiến mọi người trong tập kiểm tra đều đã "
@@ -280,7 +332,7 @@ CHUONG_2 = [
           "trên đó. Muốn con số báo cáo phản ánh đúng năng lực này, ranh giới giữa các "
           "tập phải đặt ở mức **danh tính**. Mức chênh lệch giữa hai cách chia được đo "
           "cụ thể ở mục 3.1.6."),
-    ("h3", "2.3.3. Ba giao thức đánh giá"),
+    ("h3", "2.5.3. Ba giao thức đánh giá"),
     ("p", "Một con số độ chính xác duy nhất không mô tả được hệ thống sinh trắc học, vì "
           "nó không cho biết hệ thống sai theo kiểu nào. Đề tài dùng ba giao thức, mỗi "
           "giao thức trả lời một câu hỏi khác nhau:"),
@@ -301,7 +353,7 @@ CHUONG_2 = [
           "ở định danh mở, vì xếp hạng đúng là một chuyện, còn **dám khẳng định** hay "
           "không lại đòi hỏi điểm số phải đáng tin cậy ở mức tuyệt đối. Hiện tượng này "
           "quan sát được rõ trong kết quả ở mục 3.1.7."),
-    ("h3", "2.3.4. Đánh giá tầng chống giả mạo"),
+    ("h3", "2.5.4. Đánh giá tầng chống giả mạo"),
     ("p", "Tầng chống giả mạo được đánh giá theo bộ chỉ số của tiêu chuẩn ISO/IEC "
           "30107-3, gồm ba đại lượng: **APCER** là tỉ lệ tấn công lọt qua; **BPCER** là "
           "tỉ lệ người thật bị từ chối oan; và **ACER** là trung bình của hai đại lượng "
