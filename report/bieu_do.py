@@ -26,10 +26,10 @@ ROOT = Path(__file__).resolve().parent.parent
 REPORTS = ROOT / "reports"
 
 TEN = {
-    "lfw_raw": "ArcFace\nLFW · 349 người",
-    "casia_raw": "ArcFace\nCASIA · 6.000 người",
-    "distill_raw": "Chưng cất\nLFW · 9k ảnh",
-    "distill_casia_raw": "Chưng cất\nCASIA · 112k ảnh",
+    "lfw_raw": "ArcFace theo nhãn\nLFW · 349 người",
+    "casia_raw": "ArcFace theo nhãn\nCASIA · 6.000 người",
+    "distill_raw": "Học từ FaceNet\nLFW · 9k ảnh",
+    "distill_casia_raw": "Học từ FaceNet\nCASIA · 112k ảnh",
     "facenet_raw": "FaceNet\n(thầy)",
 }
 MAU = ["#f59e0b", "#d97706", "#5eb89f", "#0e7c66", "#4f46e5"]

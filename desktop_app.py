@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDoubleSpinBo
 from src import config
 from src.face_utils import draw_results, load_db, save_db
 
+from engine.align import align_face
 from engine.anh_io import doc_anh, ghi_anh
 from engine.pipeline import FacePipeline
 from engine.settings import EngineSettings
@@ -71,6 +72,7 @@ _SVG = {
     "apply": '<path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M8 12l3 3 5-6"/>',
     "kiosk": '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="10" r="3"/>',
     "shield": '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+    "compare": '<rect x="2" y="4" width="9" height="14" rx="1.5"/><rect x="13" y="4" width="9" height="14" rx="1.5"/><path d="M12 2v20"/>',
     "hand": '<path d="M18 11V6a2 2 0 00-4 0M14 10V4a2 2 0 00-4 0v2M10 10.5V6a2 2 0 00-4 0v8M18 8a2 2 0 014 0v6a8 8 0 01-8 8h-2c-2.8 0-4.5-.86-6.42-2.78l-3.3-3.3a2.05 2.05 0 012.9-2.9L10 15"/>',
 }
 
@@ -306,7 +308,7 @@ def available_models() -> list[tuple[str, str, str]]:
             continue
         ten = onnx.stem
         mb = onnx.stat().st_size / 1e6
-        cach = "chưng cất" if "distill" in ten.lower() else "train từ đầu"
+        cach = "học từ FaceNet" if "distill" in ten.lower() else "train theo nhãn"
         r1 = RANK1.get(ten)
         diem = f" · rank-1 {r1:.3f}".replace(".", ",") if r1 is not None else ""
         cac_ban.append((r1 if r1 is not None else -1.0,
@@ -817,6 +819,15 @@ class LivePage(QWidget):
         ctl.addStretch(1)
         root.addLayout(ctl)
 
+        # Dòng thông số: mô hình nào đang chạy và chạy nhanh tới đâu. Thiếu dòng này
+        # thì đổi mô hình trong Bảng điều khiển xong, màn hình này trông y hệt cũ —
+        # người xem không có cách nào biết khác biệt nằm ở đâu.
+        self.lbl_ts = QLabel("")
+        self.lbl_ts.setStyleSheet(f"color:{C_MUT}; padding:2px 4px;")
+        root.addWidget(self.lbl_ts)
+        self._t_khung = None
+        self._fps = 0.0
+
         self.video = QLabel("Camera đang tắt"); self.video.setObjectName("Video")
         self.video.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.video.setMinimumSize(720, 460)
@@ -869,6 +880,7 @@ class LivePage(QWidget):
             self.b_start.setText("  Bắt đầu")
             self.b_start.setIcon(make_icon("play", "#fff", 18))
             self.video.setText("Camera đang tắt")
+            self.lbl_ts.setText(""); self._t_khung = None; self._fps = 0.0
             return
         if not self.engine.db:
             QMessageBox.warning(self, "Chưa có dữ liệu", "Database rỗng — hãy đăng ký người trước.")
@@ -882,9 +894,26 @@ class LivePage(QWidget):
         self.b_start.setText("  Dừng")
         self.b_start.setIcon(make_icon("stop", "#fff", 18))
 
+    def _cap_nhat_thong_so(self):
+        bay_gio = time.perf_counter()
+        if self._t_khung is not None:
+            tuc_thoi = 1.0 / max(bay_gio - self._t_khung, 1e-6)
+            self._fps = tuc_thoi if self._fps == 0 else 0.9 * self._fps + 0.1 * tuc_thoi
+        self._t_khung = bay_gio
+        pl = self.engine.pipeline
+        ms = pl._timings.get("embed") if pl else None
+        khoa = _khoa_mo_hinh(self.engine.backbone, self.engine.weights)
+        ten, loai = THONG_TIN_MH.get(khoa, (khoa, ""))
+        self.lbl_ts.setText(
+            f"Mô hình: <b>{ten}</b> ({loai})  ·  trích xuất đặc trưng "
+            f"<b>{ms:.1f} ms</b>  ·  <b>{self._fps:.0f}</b> khung/giây  ·  "
+            f"ngưỡng {self.engine.threshold:.2f}" if ms is not None else
+            f"Mô hình: <b>{ten}</b> ({loai})  ·  <b>{self._fps:.0f}</b> khung/giây")
+
     def on_frame(self, qimg: QImage, items: list):
         self.video.setPixmap(QPixmap.fromImage(qimg).scaled(
             self.video.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        self._cap_nhat_thong_so()
         self.table.setRowCount(len(items))
         for r, it in enumerate(items):
             votes = it.get("votes", 0.0)
@@ -2420,6 +2449,369 @@ class DashboardPage(QWidget):
             lbl.dat_anh(fp, ten)
 
 
+# ---------------------------------------------------------------- so sánh mô hình
+#: Mô tả từng mô hình theo cách người dùng hiểu được, không theo tên tệp.
+#: "loai" trả lời câu hỏi thầy đặt ra: mô hình này học bằng cách nào.
+THONG_TIN_MH = {
+    "facenet": ("FaceNet", "mô hình thầy · tải sẵn"),
+    "mobilefacenet_distill_casia": ("distill_casia", "học trích xuất đặc trưng từ FaceNet"),
+    "mobilefacenet_distill": ("distill", "học trích xuất đặc trưng từ FaceNet"),
+    "mobilefacenet_lfw": ("lfw", "train theo nhãn (ArcFace)"),
+    "mobilefacenet_casia": ("casia", "train theo nhãn (ArcFace)"),
+}
+
+
+#: Tệp kết quả đánh giá ứng với từng mô hình. Dùng bản "_raw" — đánh giá trên
+#: ảnh gốc, đúng giao thức mà mục 3.1.8 của báo cáo kết luận là khớp lúc chạy thật.
+_TEP_DANH_GIA = {
+    "facenet": "facenet_raw", "mobilefacenet_distill_casia": "distill_casia_raw",
+    "mobilefacenet_distill": "distill_raw", "mobilefacenet_lfw": "lfw_raw",
+    "mobilefacenet_casia": "casia_raw",
+}
+
+
+def nguong_mo_hinh(khoa: str, mac_dinh: float) -> float:
+    """Ngưỡng vận hành của RIÊNG mô hình này, lấy từ kết quả đánh giá.
+
+    Mỗi mô hình có một hệ toạ độ riêng nên điểm cosine của chúng không cùng
+    thang. Ngưỡng 0,68 chọn cho FaceNet áp sang mô hình khác là sai: casia có
+    vector chen chúc trong vùng hẹp nên ngưỡng đúng là 0,977, còn lfw cho điểm
+    thấp hơn nên ngưỡng đúng chỉ khoảng 0,55. So sánh hai mô hình bằng cùng một
+    ngưỡng thì thực chất là so sánh độ hợp ngưỡng, không phải độ chính xác.
+    """
+    import json
+    tep = config.REPORTS_DIR / f"{_TEP_DANH_GIA.get(khoa, khoa)}_eval.json"
+    try:
+        d = json.loads(tep.read_text(encoding="utf-8"))
+        return float(d["openset"]["operating_threshold"])
+    except Exception:                                  # noqa: BLE001
+        return mac_dinh
+
+
+def _khoa_mo_hinh(backend: str, weights: str) -> str:
+    return "facenet" if backend == "facenet" else Path(weights).stem
+
+
+def _dung_pipeline_so_sanh(backend: str, weights: str) -> FacePipeline:
+    """Pipeline riêng cho trang so sánh, không đụng vào pipeline của ứng dụng.
+
+    Tắt chống giả mạo và bám vết: trang này đo đúng một việc là trích xuất đặc
+    trưng và so khớp. Bật thêm các tầng khác thì thời gian đo được không còn là
+    thời gian của riêng mô hình nữa.
+    """
+    st = EngineSettings()
+    st.detect.backend = "yunet"
+    st.quality.enabled = True
+    st.track.enabled = False
+    st.liveness.enabled = False
+    st.embed.backend = backend
+    st.embed.weights = weights
+    return FacePipeline(st)
+
+
+def _dung_db_tam(pl: FacePipeline) -> dict:
+    """Dựng cơ sở dữ liệu TRONG BỘ NHỚ từ ảnh gốc, bằng mô hình của pipeline này.
+
+    Không ghi ra đĩa: trang so sánh không được làm thay đổi database thật mà
+    ứng dụng đang dùng để điểm danh.
+    """
+    db = {}
+    for ten in Engine.folders():
+        anh = [doc_anh(f) for f in Engine.folder_images(ten)]
+        anh = [a for a in anh if a is not None]
+        if not anh:
+            continue
+        v, _ = pl.embed_for_enrollment(anh, strict=True)
+        if len(v):
+            v = np.asarray(v, dtype=np.float32)
+            db[ten] = v / np.linalg.norm(v, axis=1, keepdims=True)
+    return db
+
+
+class CompareThread(QThread):
+    """Một camera, hai mô hình: phát hiện một lần, mỗi bên tự căn chỉnh và trích.
+
+    Phát hiện dùng chung vì đó không phải thứ đang được so sánh — cả hai bên đều
+    dùng YuNet. Căn chỉnh thì phải tách: FaceNet nhận ảnh 160×160, MobileFaceNet
+    nhận 112×112, mỗi mô hình cần đúng kích thước nó được huấn luyện.
+    """
+    frames_ready = Signal(QImage, QImage, dict, dict)
+    status = Signal(str)
+    failed = Signal(str)
+
+    def __init__(self, cam_index: int, trai: tuple, phai: tuple, db_chung: tuple | None,
+                 bo_nho: dict, nguong: float):
+        super().__init__()
+        self.cam_index = cam_index
+        self.trai, self.phai, self.db_chung = trai, phai, db_chung
+        self.bo_nho = bo_nho            # dùng chung giữa các lần chạy: pipeline và DB
+        self.nguong = nguong
+        self._run = True
+
+    def stop(self):
+        self._run = False
+        self.wait(4000)
+
+    def _pipeline(self, mh):
+        khoa = _khoa_mo_hinh(*mh)
+        pls = self.bo_nho.setdefault("pl", {})
+        if khoa not in pls:
+            self.status.emit(f"Đang nạp mô hình {THONG_TIN_MH.get(khoa, (khoa,))[0]}…")
+            pls[khoa] = _dung_pipeline_so_sanh(*mh)
+        return pls[khoa]
+
+    def _db(self, mh):
+        khoa = _khoa_mo_hinh(*mh)
+        dbs = self.bo_nho.setdefault("db", {})
+        if khoa not in dbs:
+            pl = self._pipeline(mh)
+            self.status.emit(f"Đang dựng cơ sở dữ liệu tạm bằng "
+                             f"{THONG_TIN_MH.get(khoa, (khoa,))[0]}…")
+            dbs[khoa] = _dung_db_tam(pl)
+        return dbs[khoa]
+
+    def run(self):
+        try:
+            pl_t, pl_p = self._pipeline(self.trai), self._pipeline(self.phai)
+            if self.db_chung:
+                db_t = db_p = self._db(self.db_chung)
+                nguon_t = nguon_p = _khoa_mo_hinh(*self.db_chung)
+            else:
+                db_t, db_p = self._db(self.trai), self._db(self.phai)
+                nguon_t, nguon_p = _khoa_mo_hinh(*self.trai), _khoa_mo_hinh(*self.phai)
+        except Exception as e:                       # noqa: BLE001
+            self.failed.emit(f"Không chuẩn bị được mô hình: {e}")
+            return
+        if not db_t or not db_p:
+            self.failed.emit("Cơ sở dữ liệu tạm rỗng — chưa có ai trong data/enrolled/.")
+            return
+
+        # Mỗi bên so bằng ngưỡng của mô hình đã tạo ra database nó đang dùng: khi
+        # không dùng chung đó là chính nó, khi dùng chung đó là mô hình của database
+        # — vì câu hỏi lúc ấy là "vector của mày có nằm đúng không gian kia không".
+        nguong_t = nguong_mo_hinh(nguon_t, self.nguong)
+        nguong_p = nguong_mo_hinh(nguon_p, self.nguong)
+
+        cap = cv2.VideoCapture(self.cam_index, cv2.CAP_DSHOW)
+        if not cap.isOpened():
+            self.failed.emit(f"Không mở được camera {self.cam_index}.")
+            return
+        self.status.emit("Đang chạy")
+        tb = {"t": [], "p": []}          # trung bình trượt thời gian, cho số đỡ nhảy
+        t_vong = time.perf_counter()
+        while self._run:
+            ok, frame = doc_khung(cap)
+            if not ok:
+                self.failed.emit("Mất tín hiệu camera."); break
+
+            t0 = time.perf_counter()
+            dets = pl_t.detector.detect(frame)
+            ms_phat_hien = (time.perf_counter() - t0) * 1000
+
+            kq = {}
+            for phia, pl, db, nguon, mh, nguong in (
+                    ("t", pl_t, db_t, nguon_t, self.trai, nguong_t),
+                    ("p", pl_p, db_p, nguon_p, self.phai, nguong_p)):
+                t0 = time.perf_counter()
+                chips = [align_face(frame, d.landmarks, pl.chip_size) for d in dets]
+                chips = [c for c in chips if c is not None]
+                ms_can = (time.perf_counter() - t0) * 1000
+                t0 = time.perf_counter()
+                vecs = pl.embedder.embed(chips) if chips else []
+                ms_trich = (time.perf_counter() - t0) * 1000
+                if chips:
+                    tb[phia] = (tb[phia] + [ms_trich])[-15:]
+                mat = []
+                for d, v in zip(dets, vecs):
+                    v = np.asarray(v, np.float32); v = v / (np.linalg.norm(v) + 1e-9)
+                    diem = {k: float((M @ v).max()) for k, M in db.items()}
+                    ten = max(diem, key=diem.get)
+                    mat.append((d, ten if diem[ten] >= nguong else None, diem[ten]))
+                khoa = _khoa_mo_hinh(*mh)
+                # Chưa từng có mặt nào thì mạng trích xuất chưa chạy lần nào: để None
+                # cho bảng hiện "—", thay vì 0 ms và vài trăm khung/giây trông như số đo.
+                ms_tb = sum(tb[phia]) / len(tb[phia]) if tb[phia] else None
+                tong = ms_phat_hien + ms_can + (ms_tb or 0.0)
+                kq[phia] = {
+                    "khoa": khoa, "nguon": nguon, "mat": mat, "nguong": nguong,
+                    "ms_trich": ms_tb,
+                    "fps": (1000.0 / tong) if ms_tb is not None and tong > 0 else None,
+                    "mb": (Path(mh[1]).stat().st_size / 1e6) if mh[1] else 107.0,
+                }
+
+            anh_t, anh_p = frame.copy(), frame.copy()
+            for anh, phia in ((anh_t, "t"), (anh_p, "p")):
+                for d, ten, diem in kq[phia]["mat"]:
+                    x1, y1, x2, y2 = [int(v) for v in d.box]
+                    mau = (80, 200, 80) if ten else (60, 60, 230)
+                    nhan = f"{_khong_dau(ten)} {diem:.2f}" if ten else f"Khong nhan ra {diem:.2f}"
+                    cv2.rectangle(anh, (x1, y1), (x2, y2), mau, 3)
+                    (tw, th), _ = cv2.getTextSize(nhan, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
+                    cv2.rectangle(anh, (x1, y1 - th - 14), (x1 + tw + 12, y1), mau, -1)
+                    cv2.putText(anh, nhan, (x1 + 6, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.8, (255, 255, 255), 2, cv2.LINE_AA)
+            vong = time.perf_counter() - t_vong; t_vong = time.perf_counter()
+            kq["t"]["fps_that"] = kq["p"]["fps_that"] = 1.0 / vong if vong > 0 else 0.0
+            self.frames_ready.emit(bgr_to_qimage(anh_t), bgr_to_qimage(anh_p), kq["t"], kq["p"])
+        cap.release()
+
+
+class ComparePage(QWidget):
+    """Cùng một khung hình, hai mô hình trích xuất đặc trưng chạy song song.
+
+    Trang này trả lời câu hỏi: *mô hình nhóm huấn luyện khác FaceNet ở chỗ nào?*
+    Trước đây chỉ trả lời được bằng bảng số trong báo cáo, trên ứng dụng thì mọi
+    mô hình trông y hệt nhau — cùng một khung, cùng một cái tên. Ở đây hai bên
+    đặt cạnh nhau, mỗi bên ghi rõ thời gian trích đặc trưng, tốc độ và điểm so khớp.
+
+    Ô "dùng chung cơ sở dữ liệu" để thấy tận mắt một điều đo được: mô hình học từ
+    FaceNet dùng chung được database của FaceNet, mô hình train theo nhãn thì không.
+    """
+
+    def __init__(self, engine: Engine):
+        super().__init__()
+        self.engine = engine
+        self.th: CompareThread | None = None
+        self.bo_nho: dict = {}                    # pipeline và DB tạm, giữ giữa các lần chạy
+
+        root = QVBoxLayout(self); root.setContentsMargins(0, 0, 0, 0); root.setSpacing(12)
+        root.addWidget(header("So sánh mô hình",
+                              "Cùng một khung hình, hai mô hình trích xuất đặc trưng chạy song song"))
+
+        self.ds = available_models()              # (nhãn, backend, weights)
+        ctl = QHBoxLayout()
+        self.b_start = btn("Bắt đầu", "play", primary=True)
+        self.b_start.clicked.connect(self.toggle)
+        self.cam_idx = QSpinBox(); self.cam_idx.setRange(0, 8); self.cam_idx.setPrefix("cam ")
+        self.cb_phai = QComboBox(); self.cb_phai.setMinimumWidth(320)
+        for nhan, be, w in self.ds:
+            if be != "facenet":
+                self.cb_phai.addItem(nhan, (be, w))
+        self.ck_chung = QCheckBox("Hai bên dùng chung cơ sở dữ liệu của:")
+        self.cb_db = QComboBox(); self.cb_db.setMinimumWidth(300)
+        for nhan, be, w in self.ds:
+            self.cb_db.addItem(nhan, (be, w))
+        self.cb_db.setEnabled(False)
+        self.ck_chung.toggled.connect(self.cb_db.setEnabled)
+        for w in (self.cb_phai, self.ck_chung, self.cb_db):
+            # Đổi lựa chọn giữa chừng thì phải dựng lại cả hai bên mới đúng.
+            sig = w.toggled if isinstance(w, QCheckBox) else w.currentIndexChanged
+            sig.connect(self._doi_lua_chon)
+        ctl.addWidget(self.b_start); ctl.addWidget(self.cam_idx)
+        ctl.addWidget(QLabel("Bên phải:")); ctl.addWidget(self.cb_phai)
+        ctl.addSpacing(16); ctl.addWidget(self.ck_chung); ctl.addWidget(self.cb_db)
+        ctl.addStretch(1)
+        root.addLayout(ctl)
+
+        goi_y = QLabel(
+            "<b>Không tích</b>: mỗi bên dùng cơ sở dữ liệu tạo bằng chính mô hình của nó — so "
+            "sánh công bằng nhất. <b>Tích vào</b>: cả hai bên cùng so với một cơ sở dữ liệu. "
+            "Chọn database của FaceNet rồi đổi bên phải giữa <i>distill_casia</i> và <i>lfw</i> "
+            "để thấy: mô hình học từ FaceNet vẫn nhận ra, mô hình train theo nhãn thì không. "
+            "Mỗi mô hình so bằng <b>ngưỡng riêng</b> của nó, vì điểm cosine của các mô hình "
+            "không cùng thang. Cơ sở dữ liệu ở trang này dựng tạm trong bộ nhớ, không đụng "
+            "database điểm danh.")
+        goi_y.setObjectName("Hint"); goi_y.setWordWrap(True)
+        root.addWidget(goi_y)
+
+        hai = QHBoxLayout(); hai.setSpacing(12)
+        self.vid, self.tt = {}, {}
+        for phia in ("t", "p"):
+            cot = QVBoxLayout(); cot.setSpacing(8)
+            v = QLabel("Camera đang tắt"); v.setObjectName("Video")
+            v.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            v.setMinimumSize(420, 300)
+            v.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            t = QLabel("—"); t.setWordWrap(True); t.setTextFormat(Qt.TextFormat.RichText)
+            t.setStyleSheet(f"background:{C_CARD}; border:1px solid {C_LINE}; "
+                            f"border-radius:10px; padding:12px;")
+            cot.addWidget(v, 1); cot.addWidget(t)
+            hai.addLayout(cot, 1)
+            self.vid[phia], self.tt[phia] = v, t
+        root.addLayout(hai, 1)
+
+        self.lbl_tt = QLabel(""); self.lbl_tt.setObjectName("Hint")
+        root.addWidget(self.lbl_tt)
+
+    def _lua_chon(self):
+        trai = ("facenet", "")
+        phai = self.cb_phai.currentData()
+        chung = self.cb_db.currentData() if self.ck_chung.isChecked() else None
+        return trai, phai, chung
+
+    def _doi_lua_chon(self, *_):
+        if self.th and self.th.isRunning():
+            self.toggle(); self.toggle()          # dừng rồi chạy lại với lựa chọn mới
+
+    def toggle(self):
+        if self.th and self.th.isRunning():
+            self.th.stop(); self.th = None
+            self.b_start.setText("  Bắt đầu"); self.b_start.setIcon(make_icon("play", "#fff", 18))
+            for v in self.vid.values():
+                v.setText("Camera đang tắt")
+            self.lbl_tt.setText("")
+            return
+        if not self.engine.folders():
+            QMessageBox.warning(self, "Chưa có dữ liệu", "Chưa có ai trong data/enrolled/.")
+            return
+        trai, phai, chung = self._lua_chon()
+        self.th = CompareThread(self.cam_idx.value(), trai, phai, chung,
+                                self.bo_nho, self.engine.threshold)
+        self.th.frames_ready.connect(self.on_frames)
+        self.th.status.connect(self.lbl_tt.setText)
+        self.th.failed.connect(self.on_fail)
+        self.th.start()
+        self.b_start.setText("  Dừng"); self.b_start.setIcon(make_icon("stop", "#fff", 18))
+
+    def _ve_thong_so(self, d: dict) -> str:
+        ten, loai = THONG_TIN_MH.get(d["khoa"], (d["khoa"], ""))
+        nguon = THONG_TIN_MH.get(d["nguon"], (d["nguon"],))[0]
+        if d["mat"]:
+            _, nguoi, diem = max(d["mat"], key=lambda x: x[2])
+            kq = (f"<span style='color:{EM}'><b>{nguoi}</b></span>" if nguoi
+                  else f"<span style='color:{RS}'><b>Không nhận ra</b></span>")
+            kq += f" &nbsp;·&nbsp; điểm so khớp <b>{diem:.3f}</b>"
+        else:
+            kq = "<span style='color:#888'>Chưa thấy khuôn mặt</span>"
+        if d["ms_trich"] is None:
+            ms = fps = "— <span style='color:#9aa'>(chưa có mặt để đo)</span>"
+        else:
+            ms = f"{d['ms_trich']:.1f} ms"
+            fps = f"{d['fps']:.0f} khung/giây"
+        return (f"<div style='font-size:15px'><b>{ten}</b> "
+                f"<span style='color:#9aa'>· {loai}</span></div>"
+                f"<table cellspacing='0' cellpadding='3' style='margin-top:6px'>"
+                f"<tr><td>Cỡ tệp</td><td><b>{d['mb']:.1f} MB</b></td></tr>"
+                f"<tr><td>Trích xuất đặc trưng</td><td><b>{ms}</b></td></tr>"
+                f"<tr><td>Tốc độ nếu chạy riêng</td><td><b>{fps}</b></td></tr>"
+                f"<tr><td>Cơ sở dữ liệu</td><td>tạo bằng <b>{nguon}</b></td></tr>"
+                f"<tr><td>Ngưỡng nhận</td><td><b>{d['nguong']:.3f}</b> "
+                f"<span style='color:#9aa'>(của {nguon})</span></td></tr>"
+                f"</table><div style='margin-top:8px'>{kq}</div>")
+
+    def on_frames(self, q_t: QImage, q_p: QImage, d_t: dict, d_p: dict):
+        for phia, q, d in (("t", q_t, d_t), ("p", q_p, d_p)):
+            v = self.vid[phia]
+            v.setPixmap(QPixmap.fromImage(q).scaled(
+                v.size(), Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation))
+            self.tt[phia].setText(self._ve_thong_so(d))
+        self.lbl_tt.setText(f"Vòng lặp thực tế (chạy cả hai mô hình nối tiếp): "
+                            f"{d_t.get('fps_that', 0):.1f} khung/giây")
+
+    def on_fail(self, msg: str):
+        if self.th:
+            self.th.stop(); self.th = None
+        self.b_start.setText("  Bắt đầu"); self.b_start.setIcon(make_icon("play", "#fff", 18))
+        for v in self.vid.values():
+            v.setText(msg)
+
+    def closeEvent(self, e):
+        if self.th:
+            self.th.stop()
+        super().closeEvent(e)
+
+
 # ---------------------------------------------------------------- main window
 class MainWindow(QMainWindow):
     def __init__(self, engine: Engine):
@@ -2441,6 +2833,7 @@ class MainWindow(QMainWindow):
         for txt, ic, col in [("Trực tiếp", "live", CY), ("Kiosk điểm danh", "kiosk", EM),
                              ("Nhận diện ảnh", "image", VI), ("Chống giả mạo", "shield", RS),
                              ("Cử chỉ tay", "hand", PK), ("Đăng ký người", "userplus", EM),
+                             ("So sánh mô hình", "compare", CY),
                              ("Bảng điều khiển", "dashboard", AM)]:
             self.nav.addItem(QListWidgetItem(make_icon(ic, col, 19), "  " + txt))
         self.nav.setCurrentRow(0)
@@ -2459,9 +2852,10 @@ class MainWindow(QMainWindow):
         self.spoof = SpoofTestPage(engine)
         self.gesture = GesturePage(engine)
         self.enroll = EnrollPage(engine, on_change=self.refresh_status)
+        self.compare = ComparePage(engine)
         self.dash = DashboardPage(engine, on_change=self.refresh_status)
         for p in (self.live, self.kiosk, self.image, self.spoof,
-                  self.gesture, self.enroll, self.dash):
+                  self.gesture, self.enroll, self.compare, self.dash):
             self.stack.addWidget(p)
         wlay.addWidget(self.stack)
         lay.addWidget(wrap, 1)
@@ -2478,7 +2872,7 @@ class MainWindow(QMainWindow):
             self.enroll.refresh_folders()
 
     def closeEvent(self, e):
-        for p in (self.live, self.kiosk, self.spoof, self.gesture, self.enroll):
+        for p in (self.live, self.kiosk, self.spoof, self.gesture, self.enroll, self.compare):
             p.closeEvent(e)
         super().closeEvent(e)
 

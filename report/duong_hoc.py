@@ -37,10 +37,10 @@ REPORTS = ROOT / "reports"
 
 #: (tên tệp lịch sử, nhãn hiển thị, cách huấn luyện)
 MO_HINH = [
-    ("mobilefacenet_lfw", "ArcFace · LFW", "từ đầu"),
-    ("mobilefacenet_casia", "ArcFace · CASIA", "từ đầu"),
-    ("mobilefacenet_distill", "Chưng cất · LFW", "chưng cất"),
-    ("mobilefacenet_distill_casia", "Chưng cất · CASIA+LFW", "chưng cất"),
+    ("mobilefacenet_lfw", "ArcFace · LFW", "train theo nhãn"),
+    ("mobilefacenet_casia", "ArcFace · CASIA", "train theo nhãn"),
+    ("mobilefacenet_distill", "Học từ FaceNet · LFW", "đích là vector FaceNet"),
+    ("mobilefacenet_distill_casia", "Học từ FaceNet · CASIA+LFW", "đích là vector FaceNet"),
 ]
 
 MAU_MAT_MAT = "#c2410c"      # cam đất — hàm mất mát khi huấn luyện

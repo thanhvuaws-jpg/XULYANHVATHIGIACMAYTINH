@@ -153,7 +153,7 @@ CHUONG_3 = [
            "hàm mất mát vọt lên, sau đó mới giảm khi mô hình thích nghi. Đúng với số đo "
            "ở trên: cùng một mô hình, hàm mất mát khởi điểm là 7,80 khi biên độ bằng 0 "
            "và 35,45 khi biên độ bằng 0,5."),
-    ("li", "**Hai mô hình chưng cất giảm trơn ngay từ vòng đầu**, không có giai đoạn vọt "
+    ("li", "**Hai mô hình học từ FaceNet giảm trơn ngay từ vòng đầu**, không có giai đoạn vọt "
            "lên, vì đích học là vector của mô hình thầy chứ không phải một bài toán phân "
            "loại có biên độ."),
     ("li", "**Mô hình ArcFace trên CASIA bị cắt ngang lúc còn đang đi lên.** Đường kiểm "
@@ -180,27 +180,27 @@ CHUONG_3 = [
           "đánh giá cũ hoàn toàn không nhìn thấy điều này, vì nó không có khái niệm "
           "người lạ."),
 
-    ("h3", "3.1.7. Chưng cất tri thức và kết quả so sánh năm mô hình"),
-    ("p", "Mô hình huấn luyện từ đầu chỉ đạt mức khiêm tốn do lượng dữ liệu và thời gian "
-          "hạn chế. Nhóm áp dụng chưng cất tri thức như trình bày ở mục 2.5.1, dùng "
-          "FaceNet làm mô hình thầy. Năm mô hình được đánh giá trên **cùng một tập kiểm "
+    ("h3", "3.1.7. Hai cách huấn luyện và kết quả so sánh năm mô hình"),
+    ("p", "Mô hình huấn luyện theo nhãn chỉ đạt mức khiêm tốn do lượng dữ liệu và thời "
+          "gian hạn chế. Nhóm áp dụng thêm cách học trích xuất đặc trưng từ mô hình thầy "
+          "như trình bày ở mục 2.5.1, dùng FaceNet làm mô hình thầy. Năm mô hình được đánh giá trên **cùng một tập kiểm "
           "tra gồm 122 người đã đăng ký và 61 người lạ**, không ai xuất hiện lúc huấn luyện."),
     ("tbl", [["Mô hình", "Dữ liệu huấn luyện", "rank-1", "EER", "DIR@1%", "ms", "MB"],
-             ["ArcFace từ đầu", "LFW · 349 người", "0,8671", "9,63 %", "0,6756", "5,29", "4,8"],
-             ["ArcFace từ đầu", "CASIA · 6.000 người", "0,7563", "9,57 %", "0,2199", "4,16", "4,8"],
-             ["Chưng cất", "LFW · 9k ảnh", "0,9082", "5,57 %", "0,5791", "6,63", "4,8"],
-             ["Chưng cất", "CASIA+LFW · 112k ảnh", "0,9778", "2,53 %", "0,7199", "4,73", "4,8"],
+             ["ArcFace theo nhãn", "LFW · 349 người", "0,8671", "9,63 %", "0,6756", "5,29", "4,8"],
+             ["ArcFace theo nhãn", "CASIA · 6.000 người", "0,7563", "9,57 %", "0,2199", "4,16", "4,8"],
+             ["Học từ FaceNet", "LFW · 9k ảnh", "0,9082", "5,57 %", "0,5791", "6,63", "4,8"],
+             ["Học từ FaceNet", "CASIA+LFW · 112k ảnh", "0,9778", "2,53 %", "0,7199", "4,73", "4,8"],
              ["FaceNet (thầy)", "VGGFace2 · 3,3 triệu ảnh", "0,9842", "1,50 %", "0,8513", "83,70", "107,0"]]),
-    ("cap", "Bảng 3.5. So sánh năm mô hình trích đặc trưng trên cùng tập kiểm tra"),
+    ("cap", "Bảng 3.5. So sánh năm mô hình trích xuất đặc trưng trên cùng tập kiểm tra"),
     ("img", "reports/bc_so_sanh_mo_hinh.png"),
     ("cap", "Hình 3.2. So sánh năm mô hình theo bốn tiêu chí: định danh, xác thực, "
             "open-set và chi phí tính toán"),
     ("p", "Ba kết luận rút ra từ bảng trên:"),
-    ("li", "**Chưng cất vượt xa huấn luyện từ đầu** ở cùng lượng dữ liệu. Lý do như đã "
+    ("li", "**Học từ mô hình thầy vượt xa huấn luyện theo nhãn** ở cùng lượng dữ liệu. Lý do như đã "
            "phân tích ở mục 2.5.1: đích hồi quy 512 chiều mang nhiều thông tin hơn nhãn "
            "một-trong-N, và phương pháp này dùng được cả ảnh không nhãn."),
     ("li", "**Dữ liệu quan trọng hơn thuật toán** trong bài toán này. Vẫn phương pháp "
-           "chưng cất, chỉ tăng dữ liệu từ 9 nghìn lên 112 nghìn ảnh đã kéo tỉ lệ đúng "
+           "học từ mô hình thầy, chỉ tăng dữ liệu từ 9 nghìn lên 112 nghìn ảnh đã kéo tỉ lệ đúng "
            "hạng nhất từ 0,908 lên 0,978."),
     ("li", "**Mô hình được chọn đạt gần bằng mô hình thầy với chi phí nhỏ hơn nhiều bậc**: "
            "0,978 so với 0,984 về tỉ lệ đúng hạng nhất, trong khi **nhẹ hơn 22 lần** "
@@ -210,22 +210,22 @@ CHUONG_3 = [
     ("tbl", [["Mô hình", "Epoch", "Tốc độ học", "Tham số ArcFace", "Thời gian", "val_ver"],
              ["ArcFace · LFW", "60", "0,10", "m 0,5 · s 32", "10,5 phút", "0,8600"],
              ["ArcFace · CASIA", "18", "0,10", "m 0,5 · s 64", "128,8 phút", "0,8240"],
-             ["Chưng cất · LFW", "30", "0,05", "hồi quy cosine", "17,2 phút", "0,9327"],
-             ["Chưng cất · CASIA+LFW", "12", "0,05", "hồi quy cosine", "76,4 phút", "0,9687"]]),
+             ["Học từ FaceNet · LFW", "30", "0,05", "hồi quy cosine", "17,2 phút", "0,9327"],
+             ["Học từ FaceNet · CASIA+LFW", "12", "0,05", "hồi quy cosine", "76,4 phút", "0,9687"]]),
     ("cap", "Bảng 3.6. Cấu hình huấn luyện bốn mô hình do nhóm huấn luyện"),
     ("p", "Mọi mô hình đều dùng chung ảnh vào 112×112, vector ra 512 chiều, lô 64 ảnh, "
           "thuật toán SGD với quán tính 0,9 và suy giảm trọng số 0,0005. Hai mô hình "
           "ArcFace có thêm giai đoạn khởi động tốc độ học và làm mượt nhãn 0,1; hai mô "
-          "hình chưng cất không cần vì đích học là vector của mô hình thầy chứ không phải "
+          "hình học từ FaceNet không cần vì đích học là vector của mô hình thầy chứ không phải "
           "nhãn phân loại. Cột val_ver là tỉ lệ xác thực đúng trên tập kiểm định gồm "
           "những người **chưa từng xuất hiện lúc huấn luyện**."),
-    ("p", "Chênh lệch thời gian giữa hai mô hình chưng cất đáng chú ý: bản LFW chạy 30 "
+    ("p", "Chênh lệch thời gian giữa hai mô hình học từ FaceNet đáng chú ý: bản LFW chạy 30 "
           "epoch chỉ mất 17,2 phút, còn bản CASIA+LFW chạy 12 epoch đã mất 76,4 phút — "
           "gấp hơn bốn lần cho mỗi epoch, đúng với tỉ lệ tăng dữ liệu từ 9 nghìn lên 112 "
           "nghìn ảnh. Vector đích của mô hình thầy được tính trước một lần rồi lưu lại, "
           "nếu không thì mỗi epoch phải chạy lại mô hình thầy 107 MB trên toàn bộ ảnh."),
 
-    ("p", "Trường hợp mô hình ArcFace huấn luyện từ đầu trên CASIA đáng được nhắc riêng: "
+    ("p", "Trường hợp mô hình ArcFace huấn luyện theo nhãn trên CASIA đáng được nhắc riêng: "
           "nó có tỉ lệ lỗi cân bằng ngang với mô hình huấn luyện trên LFW (9,57 % so với "
           "9,63 %) nhưng chỉ số open-set lại thấp hơn hẳn (0,2199 so với 0,6756). Điều "
           "này minh hoạ đúng nhận xét ở mục 2.5.3: **phân biệt được hai ảnh là một "
@@ -234,11 +234,11 @@ CHUONG_3 = [
           "cho thấy mọi vector của nó nằm chen chúc trong một vùng hẹp."),
 
     ("p", "**Mô hình nào đang chạy trong sản phẩm.** Hệ thống để mặc định là **FaceNet**, "
-          "tức mô hình thầy, chứ không phải mô hình chưng cất do nhóm huấn luyện. Lý do "
+          "tức mô hình thầy, chứ không phải mô hình do nhóm huấn luyện. Lý do "
           "là trên máy có card đồ hoạ, 83,70 mili giây mỗi lượt trích đặc trưng vẫn nằm "
           "trong ngân sách thời gian thực vì chuỗi xử lý chỉ gọi mạng trích đặc trưng mỗi "
           "vài khung trên từng người chứ không gọi mỗi khung, nên phần chính xác hơn "
-          "được ưu tiên. Mô hình chưng cất là lựa chọn dành cho máy yếu: đổi trong Bảng "
+          "được ưu tiên. Mô hình học từ FaceNet là lựa chọn dành cho máy yếu: đổi trong Bảng "
           "điều khiển rồi dựng lại chỉ mục là chạy được ngay, không phải sửa mã. Cần nói "
           "rõ điều này vì nó ảnh hưởng tới cách đọc kết quả ở Bảng 3.5 — bảng đó so sánh "
           "năng lực các mô hình, không mô tả cấu hình đang chạy."),
@@ -247,10 +247,11 @@ CHUONG_3 = [
     ("tbl", [["Mô hình", "Vai trò trong hệ thống", "Cỡ", "Nguồn"],
              ["YuNet", "Phát hiện khuôn mặt và 5 điểm mốc để căn chỉnh", "0,23 MB",
               "Có sẵn trong OpenCV"],
-             ["MobileFaceNet chưng cất", "Trích đặc trưng — nhóm huấn luyện", "4,8 MB",
+             ["MobileFaceNet (bốn bản)", "Trích xuất đặc trưng — hai bản theo nhãn, hai bản "
+              "học từ FaceNet", "4,8 MB",
               "Nhóm huấn luyện"],
-             ["FaceNet (InceptionResnetV1)", "Trích đặc trưng — đang dùng mặc định; đồng "
-              "thời là mô hình thầy lúc chưng cất", "107 MB", "Huấn luyện sẵn trên VGGFace2"],
+             ["FaceNet (InceptionResnetV1)", "Trích xuất đặc trưng — đang dùng mặc định; đồng "
+              "thời là mô hình thầy của hai bản học từ FaceNet", "107 MB", "Huấn luyện sẵn trên VGGFace2"],
              ["Face Landmarker", "Lưới 478 điểm mốc, dùng để tính EAR cho chống giả mạo",
               "3,8 MB", "MediaPipe"],
              ["Hand Landmarker", "21 điểm mốc bàn tay cho chức năng nhận diện cử chỉ",
@@ -261,6 +262,79 @@ CHUONG_3 = [
           "Hai mô hình ResNet50 thử nghiệm ở giai đoạn đầu cũng không được dùng: chúng chỉ "
           "đạt tỉ lệ xác thực đúng 0,37 và 0,29, thấp hơn hẳn MobileFaceNet trong khi nặng "
           "gấp hai mươi lần, nên nhóm chuyển hẳn sang kiến trúc nhẹ."),
+
+    ("p", "**Mạng trích xuất đặc trưng được dùng ở đâu.** Trong toàn bộ hệ thống, mạng "
+          "trích xuất đặc trưng chỉ được gọi ở hai chỗ, và cả hai chỗ luôn dùng **cùng "
+          "một mô hình** — mô hình đang chọn trong Bảng điều khiển:"),
+    ("li", "**Lúc đăng ký.** Mỗi ảnh của người mới đi qua phát hiện, cổng chất lượng và "
+           "căn chỉnh, rồi qua mạng trích xuất đặc trưng để thành một vector 512 chiều. "
+           "Vector được lưu vào cơ sở dữ liệu vector, gắn với tên người; ảnh gốc vẫn được "
+           "giữ lại trong thư mục đăng ký."),
+    ("li", "**Lúc nhận diện.** Ở mỗi khung hình camera, khuôn mặt tìm thấy đi qua đúng "
+           "các bước đó và qua **chính mạng đó** để thành vector. Vector này được so với "
+           "mọi vector trong cơ sở dữ liệu bằng độ đo cosine; điểm của mỗi người là điểm "
+           "cao nhất trong số các ảnh của người đó. Người có điểm cao nhất được nhận nếu "
+           "điểm vượt ngưỡng, sau đó còn phải qua bước bỏ phiếu nhiều khung (mục 3.1.3)."),
+    ("p", "Từ đó suy ra ba điều. Thứ nhất, **không mô hình nào học thêm khi có người "
+          "mới**: đầu phân loại 349 hoặc 6.000 lớp của ArcFace chỉ dùng lúc huấn luyện rồi "
+          "bị bỏ đi, thứ được giữ lại là phần thân biến ảnh thành vector, nên thêm một "
+          "sinh viên chỉ là thêm vector vào cơ sở dữ liệu. Thứ hai, **đổi mô hình thì phải "
+          "dựng lại cơ sở dữ liệu**: mọi ảnh trong thư mục đăng ký được đưa qua mô hình "
+          "mới để tính lại vector. Dựng lại không phải huấn luyện lại — mô hình giữ nguyên, "
+          "chỉ có vector được tính lại, nên với vài chục ảnh việc này chỉ mất vài giây. "
+          "Thứ ba, máy chủ web — nơi đăng ký và nhận diện qua giao diện web — được cấu "
+          "hình mặc định dùng FaceNet, độc lập với mô hình đang chọn ở ứng dụng máy tính."),
+    ("p", "**Các mô hình học xong khác nhau ở đâu.** Khác biệt dễ thấy là độ chính xác, "
+          "kích thước và tốc độ ở Bảng 3.5. Khác biệt sâu hơn nằm ở **hệ toạ độ của "
+          "vector**. Hàm mất mát ArcFace chỉ ràng buộc **góc giữa các vector với nhau** — "
+          "ảnh cùng người phải gần nhau, khác người phải xa nhau — chứ không quy định vector "
+          "phải nằm ở hướng nào. Xoay toàn bộ không gian 512 chiều đi một góc bất kỳ thì "
+          "mọi góc giữa các vector vẫn giữ nguyên và hàm mất mát không đổi, nên mỗi lần "
+          "huấn luyện theo nhãn lại cho ra một hệ toạ độ riêng. Mô hình học từ FaceNet thì "
+          "khác: đích học chính là vector của FaceNet, nên vector của nó bị ghim vào hệ "
+          "toạ độ của FaceNet."),
+    ("p", "Đo trên cùng một ảnh, độ tương đồng cosine giữa vector của từng mô hình và "
+          "vector của FaceNet là: Học từ FaceNet · CASIA+LFW **0,81**, Học từ FaceNet · "
+          "LFW **0,52**, ArcFace theo nhãn · LFW **0,06**, ArcFace theo nhãn · CASIA "
+          "**0,05**. Hai mô hình theo nhãn cho vector gần như vuông góc với vector của "
+          "FaceNet, tức là hai hệ toạ độ không liên quan gì tới nhau."),
+    ("p", "Thí nghiệm sau kiểm chứng hệ quả đó trên chính dữ liệu đăng ký của hệ thống, "
+          "gồm 35 ảnh của 4 người: dựng cơ sở dữ liệu bằng một mô hình, rồi nhận diện bằng "
+          "một mô hình khác. Mỗi ảnh lần lượt làm ảnh truy vấn và bị loại khỏi cơ sở dữ "
+          "liệu trong lượt của nó, nên cả đường chéo cũng là phép thử thật. Mọi ô dùng "
+          "chung ngưỡng 0,68."),
+    ("tbl", [["Đăng ký bằng \\ nhận diện bằng", "FaceNet", "Học từ FaceNet · CASIA+LFW",
+              "Học từ FaceNet · LFW", "ArcFace theo nhãn · LFW", "ArcFace theo nhãn · CASIA"],
+             ["FaceNet", "32/35", "26/35", "6/35", "0/35", "0/35"],
+             ["Học từ FaceNet · CASIA+LFW", "31/35", "31/35", "9/35", "0/35", "0/35"],
+             ["Học từ FaceNet · LFW", "13/35", "12/35", "26/35", "0/35", "0/35"],
+             ["ArcFace theo nhãn · LFW", "0/35", "0/35", "0/35", "16/35", "0/35"],
+             ["ArcFace theo nhãn · CASIA", "0/35", "0/35", "0/35", "0/35", "33/35"]]),
+    ("cap", "Bảng 3.8. Số ảnh nhận đúng khi đăng ký bằng một mô hình và nhận diện bằng "
+            "mô hình khác"),
+    ("p", "Bảng đọc theo ba vùng."),
+    ("li", "**Ba mô hình chung hệ toạ độ FaceNet nhận được chéo nhau.** Đăng ký bằng "
+           "FaceNet rồi nhận diện bằng bản học từ FaceNet trên CASIA+LFW vẫn đúng 26/35 "
+           "ảnh, chiều ngược lại đúng 31/35 — gần bằng khi dùng đúng một mô hình. Bản học "
+           "trên LFW chỉ có 9 nghìn ảnh nên bám hệ toạ độ của thầy kém hơn (độ tương đồng "
+           "0,52) và nhận chéo được ít hơn hẳn."),
+    ("li", "**Hai mô hình theo nhãn chỉ nhận được chính nó.** Mọi ô ngoài đường chéo trên "
+           "hàng và cột của chúng đều bằng 0/35, kể cả giữa hai mô hình theo nhãn với "
+           "nhau: cùng kiến trúc, cùng hàm mất mát, nhưng mỗi lần huấn luyện là một hệ "
+           "toạ độ khác."),
+    ("li", "**Đường chéo không dùng để xếp hạng mô hình.** Tập 35 ảnh quá nhỏ, và mọi ô "
+           "dùng chung ngưỡng 0,68 trong khi ngưỡng đúng của từng mô hình khác nhau — "
+           "ArcFace theo nhãn · CASIA cần tới 0,977 như đã nêu ở trên, nên ở ngưỡng 0,68 "
+           "nó nhận đúng nhiều nhưng cũng sẽ nhận nhầm người lạ. Xếp hạng mô hình là việc "
+           "của Bảng 3.5; bảng này chỉ trả lời câu hỏi hai mô hình có dùng chung được một "
+           "cơ sở dữ liệu hay không."),
+    ("p", "Hệ quả thực hành: chỉ giữa FaceNet và bản học từ FaceNet trên CASIA+LFW mới có "
+          "thể đổi mô hình mà vẫn nhận được trên cơ sở dữ liệu cũ; mọi cặp khác bắt buộc "
+          "dựng lại. Ứng dụng không dựa vào điều này — sau khi đổi mô hình, người dùng "
+          "bấm Dựng lại để mọi vector được tính lại bằng mô hình mới — nhưng đây là bằng "
+          "chứng trực tiếp nhất rằng hai cách huấn luyện cho ra hai loại mô hình khác "
+          "nhau về bản chất, chứ không chỉ khác nhau về độ chính xác. Màn hình so sánh mô "
+          "hình ở mục 3.2.7 cho phép xem hiện tượng này ngay trên camera."),
 
     ("h3", "3.1.8. Một sai lầm về giao thức đánh giá và cách phát hiện"),
     ("p", "Trong lúc tổng hợp số liệu cho báo cáo, nhóm phát hiện các kết quả open-set "
@@ -273,12 +347,12 @@ CHUONG_3 = [
           "**không bao giờ xuất hiện lúc chạy thật**, bởi khi vận hành, camera đưa vào "
           "khung hình gốc và chuỗi xử lý chỉ căn chỉnh đúng một lần."),
     ("tbl", [["Mô hình", "DIR@1% trên chip đã căn chỉnh", "DIR@1% trên ảnh gốc", "Chênh lệch"],
-             ["ArcFace từ đầu · LFW", "0,2274", "0,6756", "2,97 lần"],
-             ["ArcFace từ đầu · CASIA", "0,2107", "0,2199", "1,04 lần"],
-             ["Chưng cất · LFW", "0,2308", "0,5791", "2,51 lần"],
-             ["Chưng cất · CASIA+LFW", "0,2759", "0,7199", "2,61 lần"],
+             ["ArcFace theo nhãn · LFW", "0,2274", "0,6756", "2,97 lần"],
+             ["ArcFace theo nhãn · CASIA", "0,2107", "0,2199", "1,04 lần"],
+             ["Học từ FaceNet · LFW", "0,2308", "0,5791", "2,51 lần"],
+             ["Học từ FaceNet · CASIA+LFW", "0,2759", "0,7199", "2,61 lần"],
              ["FaceNet (thầy)", "0,7860", "0,8513", "1,08 lần"]]),
-    ("cap", "Bảng 3.8. Ảnh hưởng của nguồn ảnh kiểm tra lên chỉ số open-set"),
+    ("cap", "Bảng 3.9. Ảnh hưởng của nguồn ảnh kiểm tra lên chỉ số open-set"),
     ("p", "Tác hại **không đều giữa các mô hình**, và chính sự không đều đó chỉ ra nguyên "
           "nhân. Mô hình thầy gần như không bị ảnh hưởng vì được huấn luyện trên 3,3 "
           "triệu ảnh rất đa dạng nên chịu được biến dạng lạ. Các mô hình do nhóm huấn "
@@ -315,7 +389,7 @@ CHUONG_3 = [
              ["Mặt thật", "0,958", "0 %"],
              ["Ảnh in trên giấy", "0,056", "92 %"],
              ["Ảnh trên màn hình", "0,045", "100 %"]]),
-    ("cap", "Bảng 3.9. Kết quả tầng chống giả mạo trên tấn công MÔ PHỎNG"),
+    ("cap", "Bảng 3.10. Kết quả tầng chống giả mạo trên tấn công MÔ PHỎNG"),
     ("p", "**Những con số trên hoàn toàn không phản ánh thực tế, và nhóm đã chứng minh "
           "được điều đó bằng đo đạc.** Ứng dụng có sẵn chức năng đo bằng đòn tấn công "
           "thật: ghi 60 khung hình mặt thật trước camera, rồi giơ điện thoại hiển thị ảnh "
@@ -323,7 +397,7 @@ CHUONG_3 = [
     ("tbl", [["Loại mẫu", "Số khung", "Điểm sống trung bình", "Nhỏ nhất / Lớn nhất"],
              ["Mặt thật", "60", "0,426", "0,01 / 0,94"],
              ["Ảnh trên màn hình điện thoại", "60", "1,000", "1,00 / 1,00"]]),
-    ("cap", "Bảng 3.10. Điểm chống giả mạo đo trên tấn công THẬT"),
+    ("cap", "Bảng 3.11. Điểm chống giả mạo đo trên tấn công THẬT"),
     ("p", "Điểm sống càng cao nghĩa là hệ thống càng tin đó là người thật. Mô hình chấm "
           "**ảnh trên điện thoại thật hơn cả khuôn mặt thật** — nó không kém, nó **ngược "
           "hoàn toàn**."),
@@ -331,7 +405,7 @@ CHUONG_3 = [
              ["APCER — tấn công lọt qua", "100 %", "100 %"],
              ["BPCER — người thật bị chặn oan", "40 %", "100 %"],
              ["ACER", "70 %", "100 %"]]),
-    ("cap", "Bảng 3.11. APCER/BPCER/ACER trên tấn công thật"),
+    ("cap", "Bảng 3.12. APCER/BPCER/ACER trên tấn công thật"),
     ("p", "Không một ngưỡng nào cứu được kết quả này: ở mọi điểm cắt, **toàn bộ** đòn tấn "
           "công đều lọt qua. Đây không phải lỗi hiệu chỉnh ngưỡng mà là sai lầm về bản "
           "chất mô hình."),
@@ -340,7 +414,7 @@ CHUONG_3 = [
     ("tbl", [["Điều kiện đo", "Điểm mặt thật", "Điểm ảnh trên màn hình"],
              ["Lần 1 — ngồi xa, phòng thiếu sáng", "0,426", "1,000"],
              ["Lần 2 — ngồi gần, đủ sáng hơn", "0,995", "1,000"]]),
-    ("cap", "Bảng 3.12. Điểm chống giả mạo thay đổi theo điều kiện chụp, không theo sự sống"),
+    ("cap", "Bảng 3.13. Điểm chống giả mạo thay đổi theo điều kiện chụp, không theo sự sống"),
     ("p", "Điểm của khuôn mặt thật **nhảy từ 0,426 lên 0,995** chỉ vì đổi khoảng cách và "
           "ánh sáng, trong khi điểm của đòn tấn công đứng yên ở mức tối đa cả hai lần. "
           "Đại lượng mà mô hình thực sự học được **không phải sự sống mà là chất lượng "
@@ -357,7 +431,7 @@ CHUONG_3 = [
           "khi mô hình đầu tiên từ chối oan 56,40 % ảnh thật, và tưởng đã khắc phục xong "
           "bằng kỹ thuật khai thác mẫu khó. Nhưng những mẫu khó đó **cũng do nhóm tự sinh "
           "ra**, nên chúng chỉ vá được lỗ hổng bên trong chính thế giới mô phỏng. Con số "
-          "ACER 0,13 % ở Bảng 3.9 vì vậy không có giá trị dự báo nào về thực tế, và được "
+          "ACER 0,13 % ở Bảng 3.10 vì vậy không có giá trị dự báo nào về thực tế, và được "
           "giữ lại trong báo cáo chỉ để làm đối chứng cho bài học này."),
     ("p", "**Hướng khắc phục.** Hệ thống có sẵn một phương pháp thứ hai không phụ thuộc "
           "kết cấu ảnh: phát hiện **chớp mắt**, đo tỉ lệ khép mí qua nhiều khung hình liên "
@@ -373,7 +447,7 @@ CHUONG_3 = [
     ("tbl", [["Phương pháp", "Mặt thật", "Màn hình", "APCER", "BPCER", "ACER"],
              ["Kết cấu ảnh", "0,426–0,995", "1,000", "100 %", "0–40 %", "50–70 %"],
              ["Chớp mắt", "1,000", "0,000", "0 %", "0 %", "0 %"]]),
-    ("cap", "Bảng 3.13. So sánh hai phương pháp chống giả mạo trên tấn công thật"),
+    ("cap", "Bảng 3.14. So sánh hai phương pháp chống giả mạo trên tấn công thật"),
     ("p", "Phân tách tuyệt đối, không một khung hình nào chồng lấn. Điều này khẳng định "
           "nhận định ở trên: kết cấu ảnh chỉ là dấu hiệu **tương quan** với sự sống, và "
           "tương quan ấy đảo chiều ngay khi điều kiện chụp thay đổi; còn chuyển động mí "
@@ -410,7 +484,7 @@ CHUONG_3 = [
              ["Hạn sống của ô theo dõi", "0,6 giây", "Mất mặt quá hạn thì xoá cả lịch sử chớp"],
              ["Ngưỡng mắt đứng im", "0,020", "Hệ số biến thiên EAR trên 45 khung"],
              ["Thời gian chờ", "3 – 12 giây", "Nội suy theo mức chuyển động đo được"]]),
-    ("cap", "Bảng 3.14. Tham số của bộ phát hiện chớp mắt"),
+    ("cap", "Bảng 3.15. Tham số của bộ phát hiện chớp mắt"),
     ("p", "Hai chi tiết còn lại đều sinh ra từ lỗi gặp khi người dùng thật thử phá hệ "
           "thống, trình bày kỹ ở mục 3.1.16. Thứ nhất, bằng chứng chớp mắt gắn vào **một "
           "khuôn mặt được theo dõi liên tục**, không gắn vào một vị trí trên màn hình: ô "
@@ -470,7 +544,7 @@ CHUONG_3 = [
              ["0,020 – 0,025", "67", "0,970"],
              ["0,025 – 0,035", "151", "0,980"],
              ["trên 0,060", "115", "0,991"]]),
-    ("cap", "Bảng 3.15. Quan hệ giữa độ nét ảnh và tỉ lệ nhận diện đúng"),
+    ("cap", "Bảng 3.16. Quan hệ giữa độ nét ảnh và tỉ lệ nhận diện đúng"),
     ("p", "Độ chính xác **chỉ sụt thật sự dưới 0,010**. Ngưỡng cũ 0,025 loại 146 trên 632 "
           "ảnh, tức 23 %, trong khi những ảnh ấy vẫn nhận đúng tới khoảng 96 %. Ngưỡng "
           "được hạ xuống **0,010** và thí nghiệm cắt bỏ chạy lại:"),
@@ -479,7 +553,7 @@ CHUONG_3 = [
              ["Người không đăng ký nổi", "7 trên 122", "0 trên 122"],
              ["rank-1 so với không lọc", "−0,0111", "±0,0000"],
              ["DIR@FAR=1% so với không lọc", "+0,0508", "±0,0000"]]),
-    ("cap", "Bảng 3.16. Cổng chất lượng ở hai ngưỡng khác nhau"),
+    ("cap", "Bảng 3.17. Cổng chất lượng ở hai ngưỡng khác nhau"),
     ("p", "Đây là kết luận đáng ghi nhận nhất của thí nghiệm này: **toàn bộ lợi ích 5,1 "
           "điểm open-set mà cổng chất lượng từng mang lại đều đến từ việc nó loại rất "
           "gắt.** Nới ngưỡng vừa đủ để hệ thống dùng được ngoài đời thì lợi ích đo được "
@@ -519,7 +593,7 @@ CHUONG_3 = [
              ["Bám vết", "Mỗi vết chỉ phát đúng một sự kiện", "Đứng 30 giây trước camera vẫn chỉ tạo 1 sự kiện"],
              ["Kiosk", "Nhớ 60 giây gần nhất theo tên", "Lưu lượng mạng vô ích"],
              ["Cơ sở dữ liệu", "Ràng buộc duy nhất theo ngày", "Mọi trường hợp còn lại, kể cả sau khi đồng bộ hàng đợi"]]),
-    ("cap", "Bảng 3.17. Ba tầng chống ghi trùng bản ghi điểm danh"),
+    ("cap", "Bảng 3.18. Ba tầng chống ghi trùng bản ghi điểm danh"),
     ("p", "Ba tầng độc lập nhau có chủ đích: hai tầng trên là tối ưu hiệu năng, tầng dưới "
           "cùng mới là chốt chặn đúng nghĩa, vẫn giữ được tính đúng đắn ngay cả khi hai "
           "tầng trên bị lỗi."),
@@ -561,7 +635,7 @@ CHUONG_3 = [
              ["Có PyTorch (bản CPU)", "1,92 GB", "9,1 ms"],
              ["Chỉ ONNX Runtime", "941 MB", "4,7 ms"],
              ["Giao diện web (nginx)", "74,4 MB", "—"]]),
-    ("cap", "Bảng 3.18. Dung lượng ảnh triển khai đo được"),
+    ("cap", "Bảng 3.19. Dung lượng ảnh triển khai đo được"),
     ("p", "Việc xuất mô hình sang ONNX vì vậy không phải một bước làm cho đẹp mà là một "
           "phần của kiến trúc triển khai: nó quyết định đồng thời dung lượng cần tải về "
           "và tốc độ xử lý mỗi khuôn mặt."),
@@ -608,7 +682,7 @@ CHUONG_3 = [
              ["Kiểm thử vết chờ xác minh", "6", "Chỗ nối giữa nhận diện và chống giả mạo"],
              ["Kiểm thử số liệu tổng hợp", "12", "Đơn vị đếm và các đẳng thức giữa các ô số liệu"],
              ["Kiểm thử đường dẫn có dấu", "21", "Đọc và ghi ảnh ở thư mục đặt tên tiếng Việt"]]),
-    ("cap", "Bảng 3.19. Tám bộ kiểm thử tự động của hệ thống"),
+    ("cap", "Bảng 3.20. Tám bộ kiểm thử tự động của hệ thống"),
     ("p", "Hai bộ cuối gọi qua HTTP vào hệ thống đã triển khai, trong đó có phép thử xác "
           "nhận cổng của máy chủ API **không** truy cập được từ bên ngoài. Trong quá "
           "trình chạy lại toàn bộ, nhóm còn phát hiện một lỗi của chính bộ kiểm thử: nó "
@@ -641,8 +715,10 @@ GIAO_DIEN = [
      "thao tác bấm chụp. Mỗi khuôn mặt phát hiện được vẽ khung bao, kèm tên, độ tin cậy "
      "và điểm chống giả mạo. Khung màu xanh nghĩa là đã xác nhận danh tính, màu vàng "
      "nghĩa là đang thu thập phiếu bầu, màu đỏ nghĩa là chưa nhận ra hoặc nghi ngờ giả "
-     "mạo. Thanh bên phải hiển thị tốc độ khung hình và thời gian xử lý của từng tầng, "
-     "phục vụ việc theo dõi hiệu năng.",
+     "mạo. Dòng thông số phía trên khung hình cho biết mô hình trích xuất đặc trưng "
+     "đang chạy và cách nó được huấn luyện, thời gian trích xuất đặc trưng cho một "
+     "khuôn mặt tính bằng mili giây, số khung hình mỗi giây và ngưỡng nhận đang dùng — "
+     "nhờ đó đổi mô hình trong Bảng điều khiển xong là thấy ngay khác biệt về tốc độ.",
      "truc_tiep"),
     ("3.2.2. Màn hình kiosk điểm danh",
      "Đây là màn hình dành cho máy đặt ở cửa lớp. Giao diện được thiết kế tối giản với "
@@ -675,7 +751,29 @@ GIAO_DIEN = [
      "chỉ mục mà không cần khởi động lại chương trình — hữu ích khi cần cân đối giữa độ "
      "chính xác và tốc độ tuỳ theo cấu hình máy.",
      "bang_dieu_khien"),
-    ("3.2.7. Màn hình nhận diện cử chỉ tay",
+    ("3.2.7. Màn hình so sánh mô hình",
+     "Màn hình này chạy **hai mô hình trích xuất đặc trưng song song trên cùng một khung "
+     "hình camera**: bên trái luôn là FaceNet, bên phải là mô hình chọn trong danh sách. "
+     "Khuôn mặt chỉ được phát hiện một lần, rồi mỗi bên tự căn chỉnh, trích xuất vector "
+     "bằng mô hình của mình và so với cơ sở dữ liệu của mình. Ô \"Hai bên dùng chung cơ "
+     "sở dữ liệu\" quyết định cơ sở dữ liệu đó là gì. Khi **không tích**, mỗi bên dùng "
+     "cơ sở dữ liệu dựng bằng chính mô hình của nó — đây là phép so sánh công bằng về độ "
+     "chính xác và tốc độ. Khi **tích vào**, cả hai bên cùng so với cơ sở dữ liệu của "
+     "một mô hình chọn ở góc trên — đây là phép thử ở Bảng 3.8 chạy trực tiếp: chọn cơ sở "
+     "dữ liệu của FaceNet rồi đổi bên phải giữa bản học từ FaceNet và bản theo nhãn thì "
+     "thấy bản thứ nhất vẫn nhận ra người, bản thứ hai thì không. Dưới mỗi bên là bảng "
+     "thông số: tên mô hình và cách huấn luyện, cơ sở dữ liệu đang dùng, ngưỡng nhận, "
+     "thời gian trích xuất đặc trưng, số khung hình mỗi giây và điểm tương đồng của từng "
+     "khuôn mặt. Mỗi bên so bằng ngưỡng của mô hình đã tạo ra cơ sở dữ liệu mà nó đang "
+     "dùng, vì điểm cosine của các mô hình không cùng thang. Cơ sở dữ liệu ở màn hình này "
+     "được dựng tạm trong bộ nhớ, không đụng tới cơ sở dữ liệu điểm danh. Hình dưới "
+     "chụp ở chế độ dùng chung cơ sở dữ liệu của FaceNet, bên phải là bản ArcFace theo "
+     "nhãn trên LFW: với cùng một khuôn mặt, FaceNet nhận ra với điểm 1,000 — ảnh đưa vào "
+     "chính là một ảnh đã đăng ký — còn bản theo nhãn chỉ đạt 0,090 và không nhận ra. "
+     "Bảng thông số cũng cho thấy cái giá của độ chính xác: FaceNet mất khoảng 60 mili "
+     "giây cho một lần trích xuất đặc trưng, bản MobileFaceNet chỉ mất khoảng 5 mili giây.",
+     "so_sanh"),
+    ("3.2.8. Màn hình nhận diện cử chỉ tay",
      "Chức năng này dùng chung tầng phát hiện của hệ thống nhưng đổi đối tượng từ khuôn "
      "mặt sang bàn tay. Hai mươi mốt điểm mốc trên bàn tay được suy ra từ mỗi khung "
      "hình, rồi phân loại thành ba cử chỉ: xoè bàn tay, chụm ngón và nắm tay. Mỗi cử chỉ "
@@ -687,18 +785,18 @@ GIAO_DIEN = [
      "không phải sửa mã. Hiệu ứng chỉ phát khi cử chỉ **đổi** so với khung trước, tránh "
      "việc giữ nguyên một cử chỉ lại sinh ra hàng trăm hiệu ứng chồng nhau.",
      "cu_chi"),
-    ("3.2.8. Giao diện web — trang tổng quan",
+    ("3.2.9. Giao diện web — trang tổng quan",
      "Trang tổng quan của giao diện web hiển thị các số liệu chính trong ngày: số người "
      "đã điểm danh, số đi muộn, tỉ lệ chuyên cần và biểu đồ xu hướng bảy ngày gần nhất. "
      "Đây là màn hình giảng viên mở đầu tiên.",
      "web_tong_quan"),
-    ("3.2.9. Giao diện web — quản lý người",
+    ("3.2.10. Giao diện web — quản lý người",
      "Trang này liệt kê những người hệ thống có thể nhận diện, kèm số vector đặc trưng và "
      "số ảnh đã đăng ký của từng người — hai con số cho biết ngay hồ sơ nào còn mỏng dữ "
      "liệu. Từ đây có thể tìm theo tên hoặc mã, thêm người mới, đăng ký thêm ảnh và xoá "
      "hồ sơ.",
      "web_quan_ly"),
-    ("3.2.10. Giao diện web — sổ điểm danh",
+    ("3.2.11. Giao diện web — sổ điểm danh",
      "Sổ điểm danh hiển thị bản ghi theo khoảng ngày và theo buổi học, lọc theo trạng "
      "thái đúng giờ hoặc đi muộn, kèm số phút muộn, độ tin cậy nhận diện và mã thiết bị "
      "đã ghi nhận. Dữ liệu xuất được ra hai định dạng: CSV cho ai cần đưa sang công cụ "
@@ -719,7 +817,7 @@ KET_LUAN = [
           "Toàn bộ được đóng gói bằng Docker, khởi động bằng một lệnh."),
     ("p", "Về công nghệ, nhóm đã tự huấn luyện mạng trích đặc trưng bằng hàm mất mát "
           "ArcFace thay vì dùng lại mô hình có sẵn làm lõi. Mô hình tốt nhất do nhóm "
-          "huấn luyện, thu được qua chưng cất tri thức trên 112 nghìn ảnh, đạt tỉ lệ "
+          "huấn luyện, thu được bằng cách học trích xuất đặc trưng từ mô hình thầy trên 112 nghìn ảnh, đạt tỉ lệ "
           "đúng hạng nhất **0,9778** so với **0,9842** của mô hình thầy, trong khi "
           "**nhẹ hơn 22 lần** và **nhanh hơn 17,7 lần**. Cần nói rõ để tránh hiểu nhầm: "
           "cấu hình mặc định của sản phẩm vẫn đang chạy mô hình thầy FaceNet vì nó chính "
@@ -776,7 +874,7 @@ KET_LUAN = [
           "với dữ liệu đó; hiệu chỉnh ngưỡng cổng chất lượng theo ảnh webcam thực tế thay "
           "vì theo ảnh báo chí."),
     ("p", "Tiếp theo là các hướng mở rộng năng lực hệ thống. Về mặt mô hình, bổ sung ràng "
-          "buộc về phân bố khoảng cách trong quá trình chưng cất để thu hẹp khoảng cách "
+          "buộc về phân bố khoảng cách trong quá trình học từ mô hình thầy để thu hẹp khoảng cách "
           "open-set với mô hình thầy. Về mặt chống giả mạo, hướng tiếp theo là **thử "
           "thách ngẫu nhiên** — yêu cầu quay đầu sang trái hoặc sang phải theo thứ tự "
           "không đoán trước được — vì phát hiện chớp mắt tuy chặn được ảnh in và ảnh "
@@ -787,7 +885,7 @@ KET_LUAN = [
     ("p", "Về mặt quy trình phát triển, bài học lớn nhất của đề tài là cần đưa **người "
           "dùng thật** vào vòng kiểm thử sớm hơn. Tám lỗi nghiêm trọng nhất chỉ lộ ra khi "
           "có người thật sử dụng, trong khi 73 phép thử tự động đều xanh suốt thời gian "
-          "chúng tồn tại — 73 là số phép thử có vào thời điểm đó, hai bộ cuối ở Bảng 3.19 "
+          "chúng tồn tại — 73 là số phép thử có vào thời điểm đó, hai bộ cuối ở Bảng 3.20 "
           "được viết ra chính vì các lỗi này. Hướng cải thiện cụ thể: bổ sung kiểm thử cho **chỗ nối giữa "
           "các tầng chạy ở nhịp thời gian khác nhau**, kiểm thử cho **thao tác chuyển "
           "tiếp** giữa hai trạng thái chứ không chỉ đo từng trạng thái tĩnh, và dựng dữ "

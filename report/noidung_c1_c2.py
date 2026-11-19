@@ -81,7 +81,7 @@ CHUONG_1 = [
            "ArcFace, không dùng lại mô hình có sẵn làm lõi sản phẩm."),
     ("li", "Đánh giá theo ba giao thức chuẩn — xác thực 1:1, định danh đóng 1:N và định "
            "danh mở — thay cho một con số độ chính xác đơn lẻ."),
-    ("li", "Thu nhỏ mô hình bằng chưng cất tri thức để chạy được trên máy yếu, đồng thời "
+    ("li", "Thu nhỏ mô hình bằng cách cho mạng nhỏ **học trích xuất đặc trưng từ mô hình thầy** FaceNet để chạy được trên máy yếu, đồng thời "
            "đo rõ phần độ chính xác phải đánh đổi."),
 
     ("h2", "1.3. Phạm vi đề tài"),
@@ -104,7 +104,7 @@ CHUONG_1 = [
     ("li", "**Ảnh và luồng video khuôn mặt người** thu từ webcam và từ các bộ dữ liệu "
            "công khai, trong điều kiện chiếu sáng và góc chụp không kiểm soát."),
     ("li", "**Các mô hình mạng tích chập trích đặc trưng khuôn mặt**: MobileFaceNet, "
-           "InceptionResnetV1, cùng hàm mất mát ArcFace và kỹ thuật chưng cất tri thức."),
+           "InceptionResnetV1, cùng hai cách huấn luyện: theo nhãn bằng hàm mất mát ArcFace, và học trích xuất đặc trưng từ mô hình thầy."),
     ("li", "**Các mô hình phát hiện khuôn mặt**: MTCNN và YuNet."),
     ("li", "**Giao thức đánh giá hệ thống sinh trắc học**: TAR@FAR, đường cong CMC, "
            "DIR@FAR, và bộ chỉ số APCER/BPCER/ACER theo ISO/IEC 30107-3 dành cho phát "
@@ -141,7 +141,7 @@ CHUONG_1 = [
           "trình bày cách một mạng tích chập biến khuôn mặt thành vector đặc trưng, vì "
           "sao hàm mất mát ArcFace cho vector phân tách tốt hơn hàm mất mát phân loại "
           "thông thường, và vai trò của bước căn chỉnh khuôn mặt. Mục 2.5 trình bày kỹ "
-          "thuật chưng cất tri thức dùng để thu nhỏ mô hình, cùng giao thức đánh giá "
+          "thuật học trích xuất đặc trưng từ mô hình thầy, dùng để thu nhỏ mô hình, cùng giao thức đánh giá "
           "open-set và lý do vì sao cách đánh giá thông thường cho kết quả sai lệch."),
     ("p", "**Chương 3** trình bày quá trình phân tích, xây dựng và kiểm chứng sản phẩm. "
           "Mục 3.1 mô tả kiến trúc hệ thống, thiết kế cơ sở dữ liệu, quá trình huấn "
@@ -159,7 +159,7 @@ CHUONG_2 = [
           "(mục 2.1), và cấu trúc của một mạng nơ-ron tích chập (mục 2.2). Ba mục còn "
           "lại trình bày ba nhóm kỹ thuật quyết định chất lượng hệ thống: "
           "phát hiện khuôn mặt (mục 2.3), trích đặc trưng và hàm mất mát ArcFace "
-          "(mục 2.4), chưng cất tri thức cùng giao thức đánh giá open-set (mục 2.5)."),
+          "(mục 2.4), học trích xuất đặc trưng từ mô hình thầy cùng giao thức đánh giá open-set (mục 2.5)."),
     ("p", "Ba nhóm này được chọn vì chúng tương ứng với ba câu hỏi mà đề tài buộc phải "
           "trả lời: **tìm khuôn mặt ở đâu trong ảnh** và tìm đủ nhanh để chạy thời gian "
           "thực; **mô tả khuôn mặt bằng con số như thế nào** để hai ảnh của cùng một "
@@ -306,12 +306,27 @@ CHUONG_2 = [
            "rìa. Tích chập toàn cục theo chiều sâu cho phép mạng tự học trọng số riêng "
            "cho từng vị trí."),
 
-    ("h2", "2.5. Chưng cất tri thức và giao thức đánh giá open-set"),
-    ("h3", "2.5.1. Chưng cất tri thức"),
-    ("p", "Huấn luyện một mạng từ đầu trên lượng dữ liệu vừa phải cho kết quả hạn chế, "
-          "trong khi các mô hình công khai đã được huấn luyện trên hàng triệu ảnh. Chưng "
-          "cất tri thức là cách chuyển năng lực của một mô hình lớn (gọi là **thầy**) "
-          "sang một mô hình nhỏ (gọi là **trò**)."),
+    ("h2", "2.5. Học trích xuất đặc trưng từ mô hình thầy và giao thức đánh giá open-set"),
+    ("h3", "2.5.1. Hai cách huấn luyện một mạng trích xuất đặc trưng"),
+    ("p", "Cả năm mô hình trong đề tài đều là **mạng trích xuất đặc trưng**: nhận một "
+          "ảnh khuôn mặt đã căn chỉnh và trả ra một vector 512 chiều. Chúng không khác "
+          "nhau ở việc làm, mà khác nhau ở **cách được dạy**. Đề tài dùng hai cách:"),
+    ("li", "**Huấn luyện theo nhãn.** Mạng được cho xem ảnh kèm nhãn danh tính — ảnh "
+           "này là người thứ mấy trong bộ dữ liệu — và học phân biệt các danh tính bằng "
+           "hàm mất mát ArcFace (mục 2.4). Đây là cách huấn luyện thông thường. Hai mô "
+           "hình ArcFace · LFW và ArcFace · CASIA thuộc nhóm này."),
+    ("li", "**Học trích xuất đặc trưng từ mô hình thầy.** Mạng không nhìn nhãn. Thay "
+           "vào đó, mỗi ảnh được đưa qua một mô hình lớn đã huấn luyện sẵn — ở đây là "
+           "FaceNet, gọi là **mô hình thầy** — để lấy vector của nó, và mạng nhỏ (gọi "
+           "là **trò**) học cách cho ra vector giống hệt vector đó. Hai mô hình Học từ "
+           "FaceNet · LFW và Học từ FaceNet · CASIA+LFW thuộc nhóm này."),
+    ("p", "Trong tài liệu, cách thứ hai có tên chung là **chưng cất tri thức** "
+          "(knowledge distillation). Báo cáo gọi nó là *học trích xuất đặc trưng từ mô "
+          "hình thầy*, để nói đúng thứ được học và để khỏi nhầm với cách thứ nhất. Lý do "
+          "cần đến cách này: huấn luyện theo nhãn trên lượng dữ liệu vừa phải cho kết "
+          "quả hạn chế, trong khi mô hình công khai đã được huấn luyện trên hàng triệu "
+          "ảnh — cho mạng nhỏ học theo nó là cách chuyển năng lực của mô hình lớn sang "
+          "mô hình nhỏ."),
     ("p", "Ở bài toán phân loại thông thường, trò học theo phân bố xác suất mềm mà thầy "
           "sinh ra. Với nhận diện khuôn mặt, đề tài áp dụng một biến thể phù hợp hơn: "
           "trò học **hồi quy trực tiếp vector đặc trưng** của thầy, với hàm mục tiêu là "
@@ -321,6 +336,11 @@ CHUONG_2 = [
           "được cho trò nhiều hơn. Thứ hai, và quan trọng hơn về mặt thực hành: **trò "
           "không cần nhãn danh tính**. Chỉ cần đưa ảnh qua thầy để lấy vector đích, nên "
           "mọi ảnh khuôn mặt đều dùng được, kể cả ảnh không có nhãn."),
+    ("p", "Hai cách dạy còn để lại một khác biệt nằm ngay trong vector. Vì đích học là "
+          "vector của thầy, vector của trò nằm **trong cùng hệ toạ độ với thầy**; còn mỗi "
+          "mô hình huấn luyện theo nhãn tự tạo ra một hệ toạ độ riêng. Khác biệt này quyết "
+          "định hai mô hình có dùng chung được một cơ sở dữ liệu vector hay không, và được "
+          "đo cụ thể ở mục 3.1.7."),
     ("h3", "2.5.2. Vì sao phải chia dữ liệu theo danh tính"),
     ("p", "Một sai lầm phổ biến khi đánh giá hệ thống nhận diện khuôn mặt là chia tập "
           "kiểm tra theo **ảnh**: lấy một số ảnh của mỗi người làm tập đăng ký, số còn "
