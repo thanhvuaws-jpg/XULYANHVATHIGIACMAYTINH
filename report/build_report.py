@@ -10,7 +10,9 @@ vẹn lề, phông, cỡ chữ, giãn dòng và thụt đầu dòng mà trườn
 """
 from __future__ import annotations
 
+import io
 import sys
+from copy import deepcopy
 from pathlib import Path
 
 from docx import Document
@@ -30,6 +32,9 @@ from report.noidung_c3b import NGUOI_DUNG_THAT
 
 ROOT = Path(__file__).resolve().parent.parent
 MAU = ROOT / "formatbaocao.docx"
+#: Trang bìa theo mẫu mới của trường (có dòng "BỘ XÂY DỰNG"). Tách riêng thành
+#: tệp nhỏ vì formatbaocao.docx vẫn mang bìa cũ; xem dung_bia().
+BIA_MAU = ROOT / "report" / "bia_mau.docx"
 RA = ROOT / "BAO_CAO_HOAN_CHINH.docx"
 ANH_APP = ROOT / "report" / "anh_app"   # ảnh chụp màn hình sản phẩm
 
@@ -348,68 +353,104 @@ BIA = {
     "gvhd": "Hồ Văn Quí",
     "nhom": "10",
     "ma_lop": "010100086904",
-    "thang_nam": "10/2026",
+    "thang_nam": "12/2026",
 }
 
 #: (họ tên, MSSV, lớp, ghi chú)
 THANH_VIEN = [
     ("Đàm Thanh Vũ", "2431540219", "24ĐHTT04", "Nhóm trưởng"),
-    ("Hoàng Thuỷ Tiên", "2431540237", "24ĐHTT04", ""),
+    ("Hoàng Thủy Tiên", "2431540237", "24ĐHTT04", ""),
     ("Trương Ngọc Tiến", "2431540017", "24ĐHTT01", ""),
 ]
 
 
+def _ghi_doan(p, chu: str) -> None:
+    """Đổi chữ của một đoạn, giữ nguyên định dạng của run đầu tiên."""
+    runs = list(p.iter(qn("w:r")))
+    runs = [r for r in runs if r.find(qn("w:t")) is not None] or runs
+    if not runs:
+        r = p.makeelement(qn("w:r"), {}); p.append(r); runs = [r]
+    dau = runs[0]
+    ts = dau.findall(qn("w:t"))
+    if not ts:
+        t = dau.makeelement(qn("w:t"), {}); dau.append(t); ts = [t]
+    ts[0].text = chu
+    ts[0].set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+    for t in ts[1:]:
+        dau.remove(t)
+    for r in runs[1:]:
+        r.getparent().remove(r)
+
+
+def _chu(el) -> str:
+    return "".join(t.text or "" for t in el.iter(qn("w:t")))
+
+
 def dung_bia(doc) -> None:
-    """Điền trang bìa và bảng danh sách nhóm của mẫu.
+    """Thay trang bìa của mẫu bằng bìa mới (report/bia_mau.docx) rồi điền thông tin.
 
-    Mẫu của trường có **hai trang bìa** nằm trong hai hàng của cùng một bảng:
-    một bản ghi "TP.Hồ Chí Minh", một bản ghi "Thành phố Hồ Chí Minh". Đó là hai
-    phương án để người làm chọn một, không phải hai trang phải nộp cả. Hàm này
-    xoá hàng thứ hai, giữ lại bản đầu.
+    Mẫu của trường đã đổi bìa — thêm dòng "BỘ XÂY DỰNG" phía trên tên học viện —
+    nhưng formatbaocao.docx vẫn là bìa cũ. Bìa mới được tách từ một báo cáo đã
+    dùng mẫu mới thành tệp riêng, ở đây chép nguyên khối vào thay bìa cũ nên giữ
+    đúng khung viền, logo, phông và khoảng cách; chỉ chữ là được ghi đè.
 
-    Các ô còn tô vàng trong mẫu là chỗ giữ chỗ. Ghi đè bằng cách xoá run cũ rồi
-    ghi run mới nên vệt vàng mất theo, không phải xoá tay từng chỗ.
+    Sửa bìa thẳng trong BAO_CAO_HOAN_CHINH.docx thì lần dựng sau sẽ mất — muốn
+    đổi bìa thì sửa report/bia_mau.docx hoặc hằng số BIA ở trên.
     """
-    bang_bia = doc.tables[0]
-    if len(bang_bia.rows) > 1:
-        bang_bia._tbl.remove(bang_bia.rows[-1]._tr)
+    body = doc.element.body
+    cu = list(body)
+    het = next(i for i, e in enumerate(cu) if _chu(e).startswith("DANH MỤC CÁC KÝ HIỆU"))
+    dem = lambda els: (sum(e.tag == qn("w:p") for e in els), sum(e.tag == qn("w:tbl") for e in els))
+    truoc = dem(cu[:het])
 
-    o = bang_bia.rows[0].cells[0]
-    dien = {
-        8: (BIA["hoc_phan"], 20.0),
-        9: (BIA["de_tai"], 18.0),
-        12: (f"Giảng viên hướng dẫn: {BIA['gvhd']}", 14.0),
-        13: (f"Sinh viên/ Nhóm sinh viên thực hiện: Nhóm {BIA['nhom']}", 14.0),
-        14: ("Mã số sinh viên: " + ", ".join(t[1] for t in THANH_VIEN), 14.0),
-        15: (f"Lớp: {BIA['ma_lop']}", 14.0),
-        22: (f"TP. Hồ Chí Minh, tháng {BIA['thang_nam']}", 14.0),
-    }
-    for i, (chu, co) in dien.items():
-        doan = o.paragraphs[i]
-        canh = doan.alignment
-        _strip_runs(doan._p)
-        set_text(doan, chu, bold=True, size=co)
-        doan.alignment = canh
+    mau = Document(str(BIA_MAU))
+    moi = [deepcopy(e) for e in mau.element.body if e.tag != qn("w:sectPr")]
+    # Phần sau của bộ dựng tra đoạn văn và bảng theo SỐ THỨ TỰ (doc.tables[3],
+    # ps[97]...). Bìa mới phải có đúng số đoạn và số bảng như bìa cũ, nếu không
+    # mọi chỉ số phía sau lệch và nội dung bị ghi nhầm chỗ một cách âm thầm.
+    assert dem(moi) == truoc, f"bìa mới {dem(moi)} khác bìa cũ {truoc} (đoạn, bảng)"
 
-    # Tên đề tài dài hơn chỗ giữ chỗ "TÊN ĐỀ TÀI" nên xuống hai dòng, đẩy dòng
-    # địa danh tràn sang trang thứ hai và để lại một trang gần như trống chỉ có
-    # khung viền. Bỏ bớt ba dòng trắng ở cuối ô để bìa gọn lại trong một trang.
-    trong = [d for d in o.paragraphs[16:22] if not d.text.strip()]
-    for d in trong[:3]:
-        d._p.getparent().remove(d._p)
+    for e in cu[:het]:
+        body.remove(e)
+    for e in reversed(moi):
+        body.insert(0, e)
 
-    # Bảng danh sách nhóm: mẫu có sẵn 5 hàng mẫu, nhóm chỉ có 3 người.
-    bang = doc.tables[1]
-    while len(bang.rows) > 1:
-        bang._tbl.remove(bang.rows[-1]._tr)
-    for i, (ten, mssv, lop, ghi_chu) in enumerate(THANH_VIEN, start=1):
-        hang = bang.add_row()
-        style_cell(hang.cells[0], str(i), size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
-        style_cell(hang.cells[1], ten, size=12)
-        style_cell(hang.cells[2], mssv, size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
-        style_cell(hang.cells[3], lop, size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
-        style_cell(hang.cells[4], ghi_chu, size=12, align=WD_ALIGN_PARAGRAPH.CENTER)
-    print(f"  bìa: nhóm {BIA['nhom']}, {len(THANH_VIEN)} thành viên, đã bỏ trang bìa trùng")
+    # Gắn lại hình logo vào báo cáo.
+    for blip in body.iter("{http://schemas.openxmlformats.org/drawingml/2006/main}blip"):
+        rid_cu = blip.get(qn("r:embed"))
+        if rid_cu in mau.part.related_parts:
+            rid, _ = doc.part.get_or_add_image(io.BytesIO(mau.part.related_parts[rid_cu].blob))
+            blip.set(qn("r:embed"), rid)
+
+    # Điền chữ vào ô bìa: nhận đoạn theo phần mở đầu của nó.
+    bang_bia, bang_nhom = [e for e in moi if e.tag == qn("w:tbl")][:2]
+    quy_tac = [
+        (lambda t: t == "LẬP TRÌNH PYTHON" or t == BIA["hoc_phan"], BIA["hoc_phan"]),
+        (lambda t: t.startswith("XÂY DỰNG"), BIA["de_tai"]),
+        (lambda t: t.startswith("Giảng viên hướng dẫn"), f"Giảng viên hướng dẫn: {BIA['gvhd']}"),
+        (lambda t: t.startswith("Sinh viên/ Nhóm"),
+         f"Sinh viên/ Nhóm sinh viên thực hiện: Nhóm {BIA['nhom']}"),
+        (lambda t: t.startswith("Mã số sinh viên"),
+         "Mã số sinh viên: " + ", ".join(t[1] for t in THANH_VIEN)),
+        (lambda t: t.startswith("Lớp:"), f"Lớp: {BIA['ma_lop']}"),
+        (lambda t: t.startswith("TP. Hồ Chí Minh"), f"TP. Hồ Chí Minh, tháng {BIA['thang_nam']}"),
+    ]
+    da_dien = 0
+    for p in bang_bia.iter(qn("w:p")):
+        t = _chu(p).strip()
+        for khop, chu in quy_tac:
+            if t and khop(t):
+                _ghi_doan(p, chu); da_dien += 1
+                break
+    assert da_dien == len(quy_tac), f"chỉ điền được {da_dien}/{len(quy_tac)} dòng bìa"
+
+    # Bảng danh sách nhóm: hàng đầu là tiêu đề, mỗi hàng sau một người.
+    hang = bang_nhom.findall(qn("w:tr"))[1:]
+    assert len(hang) == len(THANH_VIEN), f"bảng nhóm có {len(hang)} hàng, nhóm có {len(THANH_VIEN)} người"
+    for i, (tr, (ten, mssv, lop, ghi_chu)) in enumerate(zip(hang, THANH_VIEN), start=1):
+        for tc, gia_tri in zip(tr.findall(qn("w:tc")), (str(i), ten, mssv, lop, ghi_chu)):
+            _ghi_doan(tc.find(qn("w:p")), gia_tri)
+    print(f"  bìa: mẫu mới, nhóm {BIA['nhom']}, {len(THANH_VIEN)} thành viên")
 
 
 def main() -> int:
