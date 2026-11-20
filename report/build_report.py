@@ -453,6 +453,60 @@ def dung_bia(doc) -> None:
     print(f"  bìa: mẫu mới, nhóm {BIA['nhom']}, {len(THANH_VIEN)} thành viên")
 
 
+def ngat_section_mo_dau(doc) -> None:
+    """Tách báo cáo làm hai section ngay trước "MỞ ĐẦU" để đánh số trang từ đó.
+
+    Trang bìa, danh mục và mục lục không đánh số; số trang 1 là trang MỞ ĐẦU.
+    Word đánh số theo section, nên phải có một ngắt section ở đúng chỗ đó.
+
+    Ngắt section trong Word là một thuộc tính của đoạn văn (w:sectPr nằm trong
+    w:pPr của đoạn cuối section). Đoạn ngay trước MỞ ĐẦU vốn mang một dấu ngắt
+    trang; dấu đó được bỏ đi và thay bằng ngắt section kiểu "trang mới" — để cả
+    hai thì giữa chúng sinh ra một trang trắng.
+
+    Phần chân trang (số trang căn giữa, bắt đầu từ 1) do report/hoan_thien.py
+    làm bằng Word, vì nó cần Word dàn trang.
+    """
+    body = doc.element.body
+    cac = list(body)
+    i_md = max(i for i, e in enumerate(cac)
+               if e.tag == qn("w:p") and _chu(e).strip() == "MỞ ĐẦU")
+    truoc = cac[i_md - 1]
+    assert truoc.tag == qn("w:p"), "phần tử trước MỞ ĐẦU không phải đoạn văn"
+    for br in list(truoc.iter(qn("w:br"))):
+        if br.get(qn("w:type")) == "page":
+            r = br.getparent()
+            r.remove(br)
+            if not any(c.tag != qn("w:rPr") for c in r):
+                r.getparent().remove(r)
+
+    cuoi = body.find(qn("w:sectPr"))
+    sect = deepcopy(cuoi)
+    # Section đầu không mang chân trang: không có tham chiếu header/footer thì
+    # section đầu tiên của tài liệu không có chân trang.
+    for ref in list(sect):
+        if ref.tag in (qn("w:headerReference"), qn("w:footerReference")):
+            sect.remove(ref)
+    kieu = sect.find(qn("w:type"))
+    if kieu is None:
+        kieu = sect.makeelement(qn("w:type"), {})
+        sect.insert(0, kieu)
+    kieu.set(qn("w:val"), "nextPage")
+    ppr = truoc.find(qn("w:pPr"))
+    if ppr is None:
+        ppr = truoc.makeelement(qn("w:pPr"), {})
+        truoc.insert(0, ppr)
+    ppr.append(sect)
+
+    # Section thân bài đánh số lại từ 1.
+    so = cuoi.find(qn("w:pgNumType"))
+    if so is None:
+        so = cuoi.makeelement(qn("w:pgNumType"), {})
+        cuoi.append(so)
+    so.set(qn("w:start"), "1")
+    print("  số trang: bắt đầu từ trang MỞ ĐẦU")
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -601,6 +655,7 @@ def main() -> int:
     viet_danh_muc_hinh(doc, moc["danh_muc"], b)
     print(f"  DANH MỤC BẢNG, HÌNH VẼ: {len(b.chu_thich_da_ghi)} mục")
 
+    ngat_section_mo_dau(doc)
     doc.save(str(RA))
     print(f"\nĐã ghi: {RA.name}")
     return 0

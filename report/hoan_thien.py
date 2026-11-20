@@ -29,7 +29,10 @@ DOCX = ROOT / "BAO_CAO_HOAN_CHINH.docx"
 PDF = ROOT / "BAO_CAO_HOAN_CHINH.pdf"
 
 # Hằng số của Word (thư viện COM không phơi tên hằng khi dùng liên kết muộn).
-WD_PAGE_NUMBER = 3            # wdActiveEndPageNumber
+# wdActiveEndAdjustedPageNumber: số trang ĐÃ tính việc đánh lại từ 1 ở MỞ ĐẦU.
+# Bản trước dùng 3 (wdActiveEndPageNumber) — đếm từ trang bìa, bỏ qua việc đánh
+# lại, nên mục lục sẽ lệch so với số in ở chân trang.
+WD_PAGE_NUMBER = 1
 WD_ALIGN_CENTER = 1
 WD_ALIGN_RIGHT = 2
 WD_TAB_LEADER_DOTS = 1
@@ -65,16 +68,25 @@ def main() -> int:
         doc = word.Documents.Open(str(DOCX))
 
         # ------------------------------------------------ 1. số trang ở chân trang
-        for sec in doc.Sections:
+        # Section 1 = bìa, danh mục, mục lục: không số trang. Từ section 2 (bắt
+        # đầu ở MỞ ĐẦU, do build_report tạo) đánh số từ 1, căn giữa.
+        for k in range(1, doc.Sections.Count + 1):
+            sec = doc.Sections(k)
             footer = sec.Footers(1)          # wdHeaderFooterPrimary
             footer.LinkToPrevious = False
-            rng = footer.Range
-            rng.Text = ""
-            rng.ParagraphFormat.Alignment = WD_ALIGN_CENTER
-            rng.Font.Name = "Times New Roman"
-            rng.Font.Size = 12
-            doc.Fields.Add(rng, WD_FIELD_PAGE)
-        print("  đã chèn số trang vào chân trang")
+            footer.Range.Text = ""
+            if k == 1 and doc.Sections.Count > 1:
+                continue
+            if k == 2:
+                footer.PageNumbers.RestartNumberingAtSection = True
+                footer.PageNumbers.StartingNumber = 1
+            doc.Fields.Add(footer.Range, WD_FIELD_PAGE)
+            # Căn giữa SAU khi chèn trường: Fields.Add thay cả đoạn trong chân
+            # trang, căn trước thì mất — đúng lỗi số trang nằm lệch trái lúc trước.
+            footer.Range.ParagraphFormat.Alignment = WD_ALIGN_CENTER
+            footer.Range.Font.Name = "Times New Roman"
+            footer.Range.Font.Size = 12
+        print(f"  đã chèn số trang vào chân trang ({doc.Sections.Count} section)")
 
         doc.Repaginate()
 
