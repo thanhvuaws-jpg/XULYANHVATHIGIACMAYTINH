@@ -2129,6 +2129,7 @@ class DashboardPage(QWidget):
                 self.cb_backbone.setCurrentIndex(i); break
         self.ed_weights = QLineEdit(engine.weights); self.ed_weights.setReadOnly(True)
         self.sp_thr = QDoubleSpinBox(); self.sp_thr.setRange(0, 1); self.sp_thr.setSingleStep(0.01)
+        self.sp_thr.setDecimals(3)       # ngưỡng casia là 0,977 — hai chữ số làm tròn thành 0,98
         self.sp_thr.setValue(engine.threshold)
         self.ed_db = QLineEdit(engine.db_path)
         b_apply = btn("Áp dụng", "apply", primary=True); b_apply.clicked.connect(self.apply)
@@ -2137,6 +2138,12 @@ class DashboardPage(QWidget):
         s.addWidget(QLabel("Ngưỡng cosine"), 1, 0); s.addWidget(self.sp_thr, 1, 1)
         s.addWidget(QLabel("Database"), 1, 2); s.addWidget(self.ed_db, 1, 3)
         s.addWidget(b_apply, 2, 3)
+        # Chọn ở ô Backbone chưa có nghĩa là đã đổi mô hình — phải bấm Áp dụng.
+        # Thiếu dòng này thì ô hiện "lfw" trong khi máy vẫn chạy FaceNet, và người
+        # dùng tưởng mình đang thử lfw.
+        self.lbl_chua_ap = QLabel(""); self.lbl_chua_ap.setWordWrap(True)
+        s.addWidget(self.lbl_chua_ap, 2, 0, 1, 3)
+        self.cb_backbone.currentIndexChanged.connect(self._bao_chua_ap_dung)
         huong_dan = QLabel(
             "<b>Đổi mô hình nhận diện.</b> Chọn Backbone → bấm <b>Áp dụng</b> → rồi "
             "bấm <b>Dựng lại database</b> ở dưới.<br>"
@@ -2195,6 +2202,20 @@ class DashboardPage(QWidget):
         root.addWidget(card(rep, rr))
         root.addStretch(1)
         self.refresh()
+        self._bao_chua_ap_dung()
+
+    def _dang_chon_khac(self) -> bool:
+        return self.cb_backbone.currentData() != (self.engine.backbone, self.engine.weights)
+
+    def _bao_chua_ap_dung(self, *_):
+        if self._dang_chon_khac():
+            dang = THONG_TIN_MH.get(_khoa_mo_hinh(self.engine.backbone, self.engine.weights),
+                                    (self.engine.backbone,))[0]
+            self.lbl_chua_ap.setText(
+                f"<span style='color:{AM}'><b>Chưa áp dụng</b> — hệ thống vẫn đang chạy "
+                f"<b>{dang}</b>. Bấm Áp dụng (hoặc Dựng lại database) để đổi.</span>")
+        else:
+            self.lbl_chua_ap.setText("")
 
     def _rebuild_db(self):
         """Dựng lại database từ ảnh gốc bằng mô hình đang chọn.
@@ -2208,6 +2229,13 @@ class DashboardPage(QWidget):
             QMessageBox.information(self, "Chưa có ai",
                                     "Chưa có folder nào trong data/enrolled/.")
             return
+
+        # Trước đây nút này dựng bằng mô hình ĐANG CHẠY nhưng nhật ký lại in tên
+        # mô hình đang CHỌN trong ô — chọn lfw, quên Áp dụng, nhật ký ghi "lfw"
+        # trong khi database vẫn dựng bằng FaceNet. Giờ: chọn khác thì áp dụng luôn.
+        if self._dang_chon_khac():
+            if not self._ap_dung(im_lang=True):
+                return
 
         mat = sorted(set(self.engine.db) - set(folders))
         if mat:
@@ -2225,7 +2253,10 @@ class DashboardPage(QWidget):
                 return
 
         self.log.clear()
-        self.log.appendPlainText(f"Dựng lại database bằng {self.cb_backbone.currentText()}\n")
+        khoa = _khoa_mo_hinh(self.engine.backbone, self.engine.weights)
+        self.log.appendPlainText(
+            f"Dựng lại database bằng {THONG_TIN_MH.get(khoa, (khoa,))[0]} · "
+            f"ngưỡng {self.engine.threshold:.3f}\n")
 
         def tien_do(ten, kq):
             if kq is None:
@@ -2276,17 +2307,33 @@ class DashboardPage(QWidget):
         return a
 
     def apply(self):
-        self.engine.threshold = float(self.sp_thr.value())
-        self.engine.db_path = self.ed_db.text().strip()
+        self._ap_dung(im_lang=False)
+
+    def _ap_dung(self, im_lang: bool) -> bool:
         backend, weights = self.cb_backbone.currentData()
         if backend != "facenet" and not Path(weights).exists():
-            QMessageBox.warning(self, "Thiếu model", f"Không thấy {weights}."); return
+            QMessageBox.warning(self, "Thiếu model", f"Không thấy {weights}."); return False
+        # Đổi mô hình thì đổi luôn ngưỡng: điểm cosine của mỗi mô hình một thang.
+        # Giữ 0,68 của FaceNet cho casia (cần 0,977) thì ai cũng lọt; cho lfw (cần
+        # 0,55) thì chính chủ cũng hay bị từ chối.
+        doi_mo_hinh = self._dang_chon_khac()
+        if doi_mo_hinh:
+            self.sp_thr.setValue(nguong_de_xuat(backend, weights))
+        self.engine.threshold = float(self.sp_thr.value())
+        self.engine.db_path = self.ed_db.text().strip()
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
             self.engine.set_backbone(backend, weights)
         finally:
             QApplication.restoreOverrideCursor()
         self.ed_weights.setText(weights)
+        self._bao_chua_ap_dung()
+        if doi_mo_hinh:
+            self.log.appendPlainText(
+                f"Đã đổi mô hình: {self.cb_backbone.currentText()}\n"
+                f"Ngưỡng tự đặt theo mô hình: {self.engine.threshold:.3f}")
+        if im_lang:
+            return True
 
         # Vector trong DB được sinh bởi mô hình CŨ. Đổi mô hình mà không dựng lại
         # DB thì các vector không còn so sánh được với nhau — cảnh báo ngay thay
@@ -2299,7 +2346,8 @@ class DashboardPage(QWidget):
             QMessageBox.information(
                 self, "Đã áp dụng",
                 f"Mô hình: {self.cb_backbone.currentText()}\n"
-                f"Ngưỡng: {self.engine.threshold:.2f}\n\n"
+                f"Ngưỡng: {self.engine.threshold:.3f}"
+                + (" (tự đặt theo mô hình)" if doi_mo_hinh else "") + "\n\n"
                 "Lưu ý: vector trong database do mô hình trước sinh ra. Nên bấm\n"
                 "'Dựng lại database' để nhận diện chính xác nhất.")
         else:
@@ -2308,6 +2356,7 @@ class DashboardPage(QWidget):
         self.refresh()
         if self.on_change:
             self.on_change()
+        return True
 
     def run_cmd(self, args, label):
         if self.cmd and self.cmd.isRunning():
@@ -2452,6 +2501,9 @@ class DashboardPage(QWidget):
 # ---------------------------------------------------------------- so sánh mô hình
 #: Mô tả từng mô hình theo cách người dùng hiểu được, không theo tên tệp.
 #: "loai" trả lời câu hỏi thầy đặt ra: mô hình này học bằng cách nào.
+#: Các mô hình cùng hệ toạ độ vector với FaceNet: chính nó và hai bản học từ nó.
+HE_FACENET = {"facenet", "mobilefacenet_distill_casia", "mobilefacenet_distill"}
+
 THONG_TIN_MH = {
     "facenet": ("FaceNet", "mô hình thầy · tải sẵn"),
     "mobilefacenet_distill_casia": ("distill_casia", "học trích xuất đặc trưng từ FaceNet"),
@@ -2486,6 +2538,17 @@ def nguong_mo_hinh(khoa: str, mac_dinh: float) -> float:
         return float(d["openset"]["operating_threshold"])
     except Exception:                                  # noqa: BLE001
         return mac_dinh
+
+
+def nguong_de_xuat(backend: str, weights: str) -> float:
+    """Ngưỡng nên dùng khi chuyển sang mô hình này ở Bảng điều khiển.
+
+    FaceNet giữ 0,68 — mức báo cáo chọn sau khi đo đánh đổi nhận nhầm / từ chối
+    oan trên người dùng thật. Mô hình khác chưa có phép đo đó nên dùng ngưỡng vận
+    hành từ kết quả đánh giá của chính nó.
+    """
+    khoa = _khoa_mo_hinh(backend, weights)
+    return 0.68 if khoa == "facenet" else nguong_mo_hinh(khoa, 0.68)
 
 
 def _khoa_mo_hinh(backend: str, weights: str) -> str:
@@ -2804,6 +2867,16 @@ class ComparePage(QWidget):
             kq += f" &nbsp;·&nbsp; điểm so khớp <b>{diem:.3f}</b>"
         else:
             kq = "<span style='color:#888'>Chưa thấy khuôn mặt</span>"
+        # Nói thẳng trên màn hình vì sao bên này nhận/không nhận khi dùng database
+        # của mô hình khác — đúng điều Bảng 3.8 của báo cáo đo được.
+        if d["khoa"] != d["nguon"]:
+            if d["khoa"] in HE_FACENET and d["nguon"] in HE_FACENET:
+                kq += (f"<div style='color:{EM}; margin-top:4px'>Cùng hệ toạ độ với "
+                       f"{nguon} (cùng học từ FaceNet) → so chéo được.</div>")
+            else:
+                kq += (f"<div style='color:{AM}; margin-top:4px'>Khác hệ toạ độ với "
+                       f"{nguon} → vector không so được với nhau; không nhận ra là "
+                       f"<b>đúng</b>, không phải lỗi.</div>")
         if d["ms_trich"] is None:
             ms = fps = "— <span style='color:#9aa'>(chưa có mặt để đo)</span>"
         else:

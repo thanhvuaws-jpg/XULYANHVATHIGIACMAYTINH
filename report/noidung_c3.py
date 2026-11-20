@@ -749,7 +749,10 @@ GIAO_DIEN = [
      "Bảng điều khiển hiển thị trạng thái hệ thống, số người đã đăng ký, số vector trong "
      "chỉ mục và mô hình đang sử dụng. Từ đây có thể đổi sang mô hình khác và dựng lại "
      "chỉ mục mà không cần khởi động lại chương trình — hữu ích khi cần cân đối giữa độ "
-     "chính xác và tốc độ tuỳ theo cấu hình máy.",
+     "chính xác và tốc độ tuỳ theo cấu hình máy. Khi đổi mô hình, ngưỡng nhận được tự "
+     "đặt theo mô hình đó, vì điểm cosine của mỗi mô hình một thang: giữ ngưỡng 0,68 của "
+     "FaceNet cho bản ArcFace trên CASIA (ngưỡng đúng 0,977) thì người lạ cũng lọt, còn "
+     "cho bản ArcFace trên LFW (ngưỡng đúng 0,55) thì chính chủ hay bị từ chối.",
      "bang_dieu_khien"),
     ("3.2.7. Màn hình so sánh mô hình",
      "Màn hình này chạy **hai mô hình trích xuất đặc trưng song song trên cùng một khung "
