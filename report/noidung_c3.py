@@ -774,7 +774,16 @@ GIAO_DIEN = [
      "FaceNet trên CASIA+LFW, bên phải là bản ArcFace theo nhãn trên LFW; ảnh đưa vào là "
      "một ảnh đã đăng ký. Bản học từ FaceNet nhận ra người với điểm 0,823 dù cơ sở dữ "
      "liệu là của mô hình khác, còn bản theo nhãn chỉ đạt 0,090 và không nhận ra — hai "
-     "mô hình cùng cỡ 4,8 MB, cùng kiến trúc, chỉ khác cách huấn luyện.",
+     "mô hình cùng cỡ 4,8 MB, cùng kiến trúc, chỉ khác cách huấn luyện. Chạy trực tiếp "
+     "trên camera, khi đồng bộ theo cơ sở dữ liệu của FaceNet, mức nhận diện **giảm dần "
+     "đúng theo thứ tự ở Bảng 3.8**: bản học từ FaceNet trên CASIA+LFW nhận ổn định; bản "
+     "học từ FaceNet trên LFW vẫn nhận được nhưng khung lúc xanh lúc đỏ, vì điểm so khớp "
+     "của nó dao động ngay quanh ngưỡng 0,631 — nó chỉ học từ 9 nghìn ảnh nên bám hệ toạ "
+     "độ của FaceNet kém hơn; hai bản theo nhãn thì không nhận ra. Màn hình này cũng cho "
+     "thấy ảnh hưởng của ánh sáng: khi tắt đồng bộ, cùng một người, bản ArcFace theo nhãn "
+     "trên LFW chỉ đạt 0,23 đến 0,34 trong phòng tối nên không nhận ra, nhưng đạt 0,62 — "
+     "vượt ngưỡng 0,552 — khi đủ sáng, trong khi FaceNet tăng từ 0,83 lên 0,92. Mô hình "
+     "nhỏ, học ít dữ liệu nhạy với ánh sáng hơn hẳn mô hình huấn luyện trên 3,3 triệu ảnh.",
      "so_sanh"),
     ("3.2.8. Màn hình nhận diện cử chỉ tay",
      "Chức năng này dùng chung tầng phát hiện của hệ thống nhưng đổi đối tượng từ khuôn "
