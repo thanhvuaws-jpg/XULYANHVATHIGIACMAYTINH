@@ -8,6 +8,33 @@ const EMPTY = {
   late_after_min: 10, location: '', weekdays: '0,1,2,3,4',
 }
 
+const HAI_SO = (n) => String(n).padStart(2, '0')
+const GIO = Array.from({ length: 24 }, (_, i) => HAI_SO(i))
+const PHUT = Array.from({ length: 12 }, (_, i) => HAI_SO(i * 5))
+
+// Chọn giờ kiểu 24 giờ bằng hai ô chọn, thay cho <input type="time">.
+// Ô giờ của trình duyệt hiển thị theo ngôn ngữ máy: Chrome tiếng Anh dùng kiểu
+// 12 giờ AM/PM, nên gõ "12" mà để nguyên AM thành 00:00 (nửa đêm), gõ 1 giờ chiều
+// mà quên đổi PM thành 01:00. Hai ô chọn 00–23 không có chỗ cho nhầm lẫn đó.
+function GioPhut({ value, onChange }) {
+  const [h, m] = value.split(':')
+  // Giá trị cũ không chia hết cho 5 (VD 07:47) vẫn phải hiện đúng, không bị nhảy.
+  const phut = PHUT.includes(m) ? PHUT : [...PHUT, m].sort()
+  return (
+    <div className="flex items-center gap-1.5">
+      <select className="input !px-2 tabular-nums" value={h} aria-label="Giờ"
+              onChange={(e) => onChange(`${e.target.value}:${m}`)}>
+        {GIO.map((g) => <option key={g} value={g}>{g} giờ</option>)}
+      </select>
+      <span className="text-slate-500">:</span>
+      <select className="input !px-2 tabular-nums" value={m} aria-label="Phút"
+              onChange={(e) => onChange(`${h}:${e.target.value}`)}>
+        {phut.map((p) => <option key={p} value={p}>{p} phút</option>)}
+      </select>
+    </div>
+  )
+}
+
 export default function Sessions() {
   const [rows, setRows] = useState(null)
   const [form, setForm] = useState(null)
@@ -24,6 +51,9 @@ export default function Sessions() {
     else set.add(key)
     setForm({ ...form, weekdays: [...set].sort().join(',') })
   }
+
+  // "HH:MM" so sánh chuỗi được vì luôn đủ hai chữ số.
+  const gioHopLe = !form || form.end_time > form.start_time
 
   const save = async () => {
     try {
@@ -114,7 +144,8 @@ export default function Sessions() {
         footer={
           <>
             <button className="btn" onClick={() => setForm(null)}>Huỷ</button>
-            <button className="btn btn-primary" disabled={!form?.name} onClick={save}>Lưu</button>
+            <button className="btn btn-primary" disabled={!form?.name || !gioHopLe}
+                    onClick={save}>Lưu</button>
           </>
         }
       >
@@ -126,22 +157,27 @@ export default function Sessions() {
                      placeholder="VD: Ca sáng — Xử lý ảnh"
                      onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Bắt đầu</label>
-                <input type="time" className="input" value={form.start_time}
-                       onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
+                <label className="label">Bắt đầu (24 giờ)</label>
+                <GioPhut value={form.start_time}
+                         onChange={(v) => setForm({ ...form, start_time: v })} />
               </div>
               <div>
-                <label className="label">Kết thúc</label>
-                <input type="time" className="input" value={form.end_time}
-                       onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
+                <label className="label">Kết thúc (24 giờ)</label>
+                <GioPhut value={form.end_time}
+                         onChange={(v) => setForm({ ...form, end_time: v })} />
               </div>
-              <div>
-                <label className="label">Muộn sau (phút)</label>
-                <input type="number" className="input" value={form.late_after_min}
-                       onChange={(e) => setForm({ ...form, late_after_min: +e.target.value })} />
-              </div>
+            </div>
+            {!gioHopLe && (
+              <p className="text-xs text-rose-400">
+                Giờ kết thúc phải sau giờ bắt đầu — ca qua nửa đêm chưa được hỗ trợ.
+              </p>
+            )}
+            <div>
+              <label className="label">Muộn sau (phút)</label>
+              <input type="number" min="0" className="input" value={form.late_after_min}
+                     onChange={(e) => setForm({ ...form, late_after_min: +e.target.value })} />
             </div>
             <div>
               <label className="label">Địa điểm</label>

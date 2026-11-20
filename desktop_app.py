@@ -2664,8 +2664,10 @@ class ComparePage(QWidget):
     mô hình trông y hệt nhau — cùng một khung, cùng một cái tên. Ở đây hai bên
     đặt cạnh nhau, mỗi bên ghi rõ thời gian trích đặc trưng, tốc độ và điểm so khớp.
 
-    Ô "dùng chung cơ sở dữ liệu" để thấy tận mắt một điều đo được: mô hình học từ
-    FaceNet dùng chung được database của FaceNet, mô hình train theo nhãn thì không.
+    Mỗi camera tự chọn mô hình. Nút "Đồng bộ cơ sở dữ liệu" ở giữa cho cả hai bên
+    cùng so với một database, dựng bằng mô hình tuỳ chọn — để thấy tận mắt một điều
+    đo được: mô hình học từ FaceNet dùng chung được database của FaceNet, mô hình
+    train theo nhãn thì không.
     """
 
     def __init__(self, engine: Engine):
@@ -2679,45 +2681,57 @@ class ComparePage(QWidget):
                               "Cùng một khung hình, hai mô hình trích xuất đặc trưng chạy song song"))
 
         self.ds = available_models()              # (nhãn, backend, weights)
+
+        def hop_mo_hinh() -> QComboBox:
+            cb = QComboBox()
+            for nhan, be, w in self.ds:
+                cb.addItem(nhan, (be, w))
+            # Nhãn mô hình dài; để hộp co theo cột thay vì đẩy cả trang tràn ngang.
+            cb.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+            cb.setMinimumContentsLength(20)
+            cb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            return cb
+
+        # Hàng trên: bật/tắt camera ở trái, nút đồng bộ cơ sở dữ liệu ở giữa.
         ctl = QHBoxLayout()
         self.b_start = btn("Bắt đầu", "play", primary=True)
         self.b_start.clicked.connect(self.toggle)
         self.cam_idx = QSpinBox(); self.cam_idx.setRange(0, 8); self.cam_idx.setPrefix("cam ")
-        self.cb_phai = QComboBox(); self.cb_phai.setMinimumWidth(320)
-        for nhan, be, w in self.ds:
-            if be != "facenet":
-                self.cb_phai.addItem(nhan, (be, w))
-        self.ck_chung = QCheckBox("Hai bên dùng chung cơ sở dữ liệu của:")
-        self.cb_db = QComboBox(); self.cb_db.setMinimumWidth(300)
-        for nhan, be, w in self.ds:
-            self.cb_db.addItem(nhan, (be, w))
+        self.b_dong_bo = btn("Đồng bộ cơ sở dữ liệu: TẮT", "refresh")
+        self.b_dong_bo.setCheckable(True)
+        self.b_dong_bo.setToolTip("Bật: cả hai camera cùng so với một cơ sở dữ liệu, "
+                                  "dựng bằng mô hình chọn ở ô bên cạnh.")
+        self.cb_db = hop_mo_hinh()
         self.cb_db.setEnabled(False)
-        self.ck_chung.toggled.connect(self.cb_db.setEnabled)
-        for w in (self.cb_phai, self.ck_chung, self.cb_db):
-            # Đổi lựa chọn giữa chừng thì phải dựng lại cả hai bên mới đúng.
-            sig = w.toggled if isinstance(w, QCheckBox) else w.currentIndexChanged
-            sig.connect(self._doi_lua_chon)
+        self.b_dong_bo.toggled.connect(self._ve_nut_dong_bo)
         ctl.addWidget(self.b_start); ctl.addWidget(self.cam_idx)
-        ctl.addWidget(QLabel("Bên phải:")); ctl.addWidget(self.cb_phai)
-        ctl.addSpacing(16); ctl.addWidget(self.ck_chung); ctl.addWidget(self.cb_db)
+        ctl.addStretch(1)
+        ctl.addWidget(self.b_dong_bo); ctl.addWidget(self.cb_db, 2)
         ctl.addStretch(1)
         root.addLayout(ctl)
 
         goi_y = QLabel(
-            "<b>Không tích</b>: mỗi bên dùng cơ sở dữ liệu tạo bằng chính mô hình của nó — so "
-            "sánh công bằng nhất. <b>Tích vào</b>: cả hai bên cùng so với một cơ sở dữ liệu. "
-            "Chọn database của FaceNet rồi đổi bên phải giữa <i>distill_casia</i> và <i>lfw</i> "
-            "để thấy: mô hình học từ FaceNet vẫn nhận ra, mô hình train theo nhãn thì không. "
-            "Mỗi mô hình so bằng <b>ngưỡng riêng</b> của nó, vì điểm cosine của các mô hình "
-            "không cùng thang. Cơ sở dữ liệu ở trang này dựng tạm trong bộ nhớ, không đụng "
-            "database điểm danh.")
+            "Mỗi camera tự chọn mô hình trích xuất đặc trưng ở ô phía trên nó. "
+            "<b>Đồng bộ TẮT</b>: mỗi bên dùng cơ sở dữ liệu tạo bằng chính mô hình của nó — "
+            "so sánh công bằng nhất. <b>Đồng bộ BẬT</b>: cả hai bên cùng so với cơ sở dữ liệu "
+            "của mô hình chọn ở giữa. Chọn cơ sở dữ liệu của FaceNet rồi cho hai bên là "
+            "<i>distill_casia</i> và <i>lfw</i> để thấy: mô hình học từ FaceNet vẫn nhận ra, "
+            "mô hình train theo nhãn thì không. Mỗi bên so bằng <b>ngưỡng</b> của mô hình đã "
+            "tạo ra cơ sở dữ liệu nó đang dùng, vì điểm cosine của các mô hình không cùng thang. "
+            "Cơ sở dữ liệu ở trang này dựng tạm trong bộ nhớ, không đụng database điểm danh.")
         goi_y.setObjectName("Hint"); goi_y.setWordWrap(True)
         root.addWidget(goi_y)
 
         hai = QHBoxLayout(); hai.setSpacing(12)
-        self.vid, self.tt = {}, {}
-        for phia in ("t", "p"):
+        self.vid, self.tt, self.cb_mh = {}, {}, {}
+        for phia, ten_cot in (("t", "Camera trái"), ("p", "Camera phải")):
             cot = QVBoxLayout(); cot.setSpacing(8)
+            hang = QHBoxLayout()
+            nhan_cot = QLabel(f"<b>{ten_cot}</b> · mô hình:")
+            cb = hop_mo_hinh()
+            hang.addWidget(nhan_cot); hang.addWidget(cb, 1)
+            cot.addLayout(hang)
+            self.cb_mh[phia] = cb
             v = QLabel("Camera đang tắt"); v.setObjectName("Video")
             v.setAlignment(Qt.AlignmentFlag.AlignCenter)
             v.setMinimumSize(420, 300)
@@ -2733,10 +2747,27 @@ class ComparePage(QWidget):
         self.lbl_tt = QLabel(""); self.lbl_tt.setObjectName("Hint")
         root.addWidget(self.lbl_tt)
 
+        # Mặc định: trái FaceNet, phải mô hình đứng thứ hai trong danh sách (chính xác
+        # nhất trong số mô hình nhóm huấn luyện) — cặp đáng so nhất khi mới mở trang.
+        if self.cb_mh["p"].count() > 1:
+            self.cb_mh["p"].setCurrentIndex(1)
+        for w in (self.cb_mh["t"], self.cb_mh["p"], self.cb_db):
+            # Đổi lựa chọn giữa chừng thì phải dựng lại cả hai bên mới đúng.
+            w.currentIndexChanged.connect(self._doi_lua_chon)
+        self.b_dong_bo.toggled.connect(self._doi_lua_chon)
+
+    def _ve_nut_dong_bo(self, bat: bool):
+        self.cb_db.setEnabled(bat)
+        self.b_dong_bo.setText("  Đồng bộ cơ sở dữ liệu: " + ("BẬT — dùng chung của" if bat else "TẮT"))
+        self.b_dong_bo.setIcon(make_icon("refresh", "#ffffff" if bat else SL, 18))
+        self.b_dong_bo.setStyleSheet(
+            f"background:{EM}; border:1px solid {EM}; color:#0b1410; font-weight:600;"
+            if bat else "")
+
     def _lua_chon(self):
-        trai = ("facenet", "")
-        phai = self.cb_phai.currentData()
-        chung = self.cb_db.currentData() if self.ck_chung.isChecked() else None
+        trai = self.cb_mh["t"].currentData()
+        phai = self.cb_mh["p"].currentData()
+        chung = self.cb_db.currentData() if self.b_dong_bo.isChecked() else None
         return trai, phai, chung
 
     def _doi_lua_chon(self, *_):
