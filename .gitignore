@@ -61,3 +61,4 @@ db/*.bak
 
 # Tệp khoá tạm Word tạo ra khi đang mở tài liệu.
 ~$*
+nop_bai/
