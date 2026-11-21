@@ -115,9 +115,17 @@ def main() -> int:
                             files={"file": fh}, data={"device_id": "test-ws"}).json()
     th.join(timeout=31)
 
-    if not res.get("created"):
-        # Người này đã điểm danh hôm nay rồi: theo thiết kế thì KHÔNG tạo bản ghi
-        # mới, nên cũng không phát sự kiện. Đó là hành vi đúng, không phải lỗi.
+    if not res.get("recognized"):
+        # Không nhận ra (VD máy chủ chưa ai đăng ký): máy chủ ghi sự kiện người lạ
+        # và CỐ Ý báo xuống web bằng tin "unknown" (routers/recognize.py). Bản
+        # trước của phép thử coi mọi tin ở nhánh này là lỗi — viết trước khi có
+        # tính năng báo người lạ, nên đỏ dù máy chủ hành xử đúng.
+        e = nhan[0] if nhan else {}
+        check("Phát tin người lạ khi không nhận ra", e.get("type") == "unknown",
+              f"máy chủ trả: {res.get('message', '')} · nhận {e}")
+    elif not res.get("created"):
+        # Nhận ra nhưng người này đã điểm danh hôm nay rồi: theo thiết kế thì KHÔNG
+        # tạo bản ghi mới, nên cũng không phát sự kiện. Đó là hành vi đúng.
         check("Không phát sự kiện khi không tạo bản ghi mới", not nhan,
               f"máy chủ trả: {res.get('message', '')}")
     else:

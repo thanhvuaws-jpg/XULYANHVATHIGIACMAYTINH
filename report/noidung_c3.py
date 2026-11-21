@@ -282,8 +282,13 @@ CHUONG_3 = [
           "dựng lại cơ sở dữ liệu**: mọi ảnh trong thư mục đăng ký được đưa qua mô hình "
           "mới để tính lại vector. Dựng lại không phải huấn luyện lại — mô hình giữ nguyên, "
           "chỉ có vector được tính lại, nên với vài chục ảnh việc này chỉ mất vài giây. "
-          "Thứ ba, máy chủ web — nơi đăng ký và nhận diện qua giao diện web — được cấu "
-          "hình mặc định dùng FaceNet, độc lập với mô hình đang chọn ở ứng dụng máy tính."),
+          "Thứ ba, máy chủ web — nơi đăng ký và nhận diện qua giao diện web — chạy mô hình "
+          "riêng, độc lập với mô hình đang chọn ở ứng dụng máy tính. Bản triển khai bằng "
+          "Docker dùng **bản học từ FaceNet trên CASIA+LFW** (tệp ONNX 4,8 MB), vì ảnh Docker "
+          "của máy chủ cố ý không cài PyTorch nên không chạy được FaceNet; chạy máy chủ "
+          "trực tiếp không qua Docker thì mặc định là FaceNet. Máy chủ và ứng dụng máy tính "
+          "cũng giữ hai cơ sở dữ liệu riêng, nên người đăng ký ở bên nào thì được nhận diện "
+          "ở bên đó."),
     ("p", "**Các mô hình học xong khác nhau ở đâu.** Khác biệt dễ thấy là độ chính xác, "
           "kích thước và tốc độ ở Bảng 3.5. Khác biệt sâu hơn nằm ở **hệ toạ độ của "
           "vector**. Hàm mất mát ArcFace chỉ ràng buộc **góc giữa các vector với nhau** — "
